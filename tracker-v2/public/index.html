@@ -659,11 +659,11 @@ function buildChartData(rawData, mode, days){
   for(let i=days-1;i>=0;i--){
     const d=new Date(today);d.setDate(today.getDate()-i);
     const iso=toLocalISO(d);
-    const label=(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
+    const label=d.getDate().toString().padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0');
     const entry=rawData.find(r=>r.date===iso);
-    if(mode==='pct') result.push({label,value:entry?entry.pct:null});
-    else if(mode==='sleep') result.push({label,value:entry&&entry.durationMinutes?+(entry.durationMinutes/60).toFixed(1):null});
-    else if(mode==='score') result.push({label,value:entry?entry.score:null});
+    if(mode==='pct') result.push({label,value:entry?entry.pct:0});
+    else if(mode==='sleep') result.push({label,value:entry&&entry.durationMinutes?+(entry.durationMinutes/60).toFixed(1):0});
+    else if(mode==='score') result.push({label,value:entry?entry.score:0});
   }
   return result;
 }
