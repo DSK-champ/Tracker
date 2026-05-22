@@ -43,7 +43,7 @@ const sleepSchema = new mongoose.Schema({
 
 const stressSchema = new mongoose.Schema({
   date: { type: String, required: true },
-  score: { type: Number, min: 1, max: 10 },
+  score: { type: Number, min: 0, max: 10 },
   triggers: [String],
   notes: String
 }, { timestamps: true });
@@ -59,10 +59,17 @@ const reflectionSchema = new mongoose.Schema({
   mood: { type: Number, min: 1, max: 5 }
 }, { timestamps: true });
 
+const dayConfigSchema = new mongoose.Schema({
+  date: { type: String, required: true, unique: true },
+  dayType: { type: String, enum: ['A','B','sunday'], required: true },
+  contest: { type: Boolean, default: false }
+}, { timestamps: true });
+
 const Task       = mongoose.model('Task', taskSchema);
 const Sleep      = mongoose.model('Sleep', sleepSchema);
 const Stress     = mongoose.model('Stress', stressSchema);
 const Reflection = mongoose.model('Reflection', reflectionSchema);
+const DayConfig  = mongoose.model('DayConfig', dayConfigSchema);
 
 // ─── Task Routes ─────────────────────────────────────────────────────────────
 
@@ -163,6 +170,29 @@ app.post('/api/reflection', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ─── DayConfig Routes ────────────────────────────────────────────────────────
+
+app.get('/api/dayconfig/:date', async (req, res) => {
+  try {
+    const record = await DayConfig.findOne({ date: req.params.date });
+    res.json(record || null);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/dayconfig', async (req, res) => {
+  try {
+    const existing = await DayConfig.findOne({ date: req.body.date });
+    if (existing) {
+      existing.dayType = req.body.dayType;
+      existing.contest = req.body.contest;
+      await existing.save();
+      return res.json(existing);
+    }
+    const record = await DayConfig.create(req.body);
+    res.json(record);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Stats Routes ────────────────────────────────────────────────────────────
 
 app.get('/api/stats/productivity', async (req, res) => {
@@ -188,15 +218,15 @@ app.get('/api/stats/productivity', async (req, res) => {
 
 app.get('/api/stats/sleep', async (req, res) => {
   try {
-    const records = await Sleep.find().sort({ date: 1 }).limit(30);
-    res.json(records);
+    const records = await Sleep.find().sort({ date: -1 }).limit(30);
+    res.json(records.reverse());
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/stats/stress', async (req, res) => {
   try {
-    const records = await Stress.find().sort({ date: 1 }).limit(30);
-    res.json(records);
+    const records = await Stress.find().sort({ date: -1 }).limit(30);
+    res.json(records.reverse());
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -212,7 +242,7 @@ app.get('/api/stats/streaks', async (req, res) => {
       cur = diff === 1 ? cur + 1 : 1;
       maxStreak = Math.max(maxStreak, cur);
     }
-    const today = new Date().toISOString().slice(0,10);
+    const _n = new Date(); const today = _n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0')+'-'+String(_n.getDate()).padStart(2,'0');
     const lastDate = dates[dates.length - 1];
     const daysSinceLast = lastDate ? Math.floor((new Date(today) - new Date(lastDate)) / 86400000) : 999;
     streak = daysSinceLast <= 1 ? cur : 0;
