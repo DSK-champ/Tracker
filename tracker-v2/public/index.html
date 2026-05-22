@@ -185,8 +185,15 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
 
 <script>
 (function(){
-  if(sessionStorage.getItem('unlocked')==='1'){
+  // Only skip lock on an explicit page reload (F5), not on fresh navigation or tab restore
+  const navType = performance.getEntriesByType('navigation')[0]?.type;
+  const isReload = navType === 'reload';
+  const wasUnlocked = sessionStorage.getItem('unlocked') === '1';
+  if(isReload && wasUnlocked){
     document.getElementById('lockscreen').style.display='none';
+  } else {
+    // Clear stale unlock so restored tabs must re-authenticate
+    sessionStorage.removeItem('unlocked');
   }
   window.tryUnlock=function(){
     const inp=document.getElementById('lock-inp');
