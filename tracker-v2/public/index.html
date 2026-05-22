@@ -238,7 +238,8 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
 <div class="toast" id="toast"></div>
 <script>
 const API='';
-const TODAY=new Date().toISOString().slice(0,10);
+function toLocalISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const TODAY=toLocalISO(new Date());
 const QUOTES=[
   {t:"Discipline is doing what needs to be done, even when you don't want to.",s:"— Unknown"},
   {t:"The secret of getting ahead is getting started.",s:"— Mark Twain"},
@@ -389,7 +390,7 @@ function buildWeek(){
   start.setDate(now.getDate()-(dow===0?6:dow-1));
   for(let i=0;i<7;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);
-    const iso=d.toISOString().slice(0,10);
+    const iso=toLocalISO(d);
     const el=document.createElement('div');
     el.className='wday'+(iso===TODAY?' today':'')+(iso===curDate?' active':'');
     el.dataset.date=iso;
@@ -657,7 +658,7 @@ function buildChartData(rawData, mode, days){
   const result=[];
   for(let i=days-1;i>=0;i--){
     const d=new Date(today);d.setDate(today.getDate()-i);
-    const iso=d.toISOString().slice(0,10);
+    const iso=toLocalISO(d);
     const label=(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
     const entry=rawData.find(r=>r.date===iso);
     if(mode==='pct') result.push({label,value:entry?entry.pct:null});
