@@ -17,10 +17,13 @@ mongoose.connect(MONGO_URI).then(() => console.log('MongoDB connected')).catch(e
 
 const taskSchema = new mongoose.Schema({
   date: { type: String, required: true },       // "YYYY-MM-DD"
-  dayType: { type: String, enum: ['A','B','contest','sunday'] },
+  dayType: { type: String },                    // "custom" or optional
   blockId: String,
   blockLabel: String,
-  category: { type: String, enum: ['academics','health','general'] },
+  startTime: String,                            // "HH:MM"
+  endTime: String,                              // "HH:MM"
+  colorClass: String,                           // e.g. "tech", "body", "looks", "rest", "bible", "contest"
+  category: { type: String },
   collection: String,                            // e.g. "DSA","MERN","gym","looksmax"
   subtasks: [{
     id: String,
@@ -112,6 +115,13 @@ app.put('/api/tasks/:id', async (req, res) => {
   try {
     const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(task);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

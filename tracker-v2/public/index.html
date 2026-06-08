@@ -291,10 +291,7 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   <div class="dayhdr">
     <div><div class="daytitle" id="daytitle">—</div><div class="daysub" id="daysub"></div></div>
     <div class="dayctrl">
-      <button class="dcbtn active" id="btn-A" onclick="setDT('A')">Day A</button>
-      <button class="dcbtn" id="btn-B" onclick="setDT('B')">Day B</button>
-      <button class="dcbtn" id="btn-sunday" onclick="setDT('sunday')">Sunday</button>
-      <button class="dcbtn ctbtn" id="btn-contest" onclick="togContest()">+ Contest</button>
+      <button class="dcbtn" id="btn-add-block" onclick="showAddBlockModal()">+ Add Block</button>
     </div>
   </div>
   <div class="progwrap">
@@ -401,6 +398,71 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   </div>
 </div>
 
+<!-- Block Edit/Add Modal -->
+<div class="gym-modal-overlay" id="block-modal-overlay" onclick="if(event.target===this)closeBlockModal()">
+  <div class="gym-modal">
+    <h3 id="block-modal-title">Add Schedule Block</h3>
+    <div class="fg">
+      <div class="flbl">Block Title</div>
+      <input type="text" class="finp" id="blk-title" placeholder="e.g. Focus Zone"/>
+    </div>
+    <div class="gm-row">
+      <div class="fg">
+        <div class="flbl">Start Time</div>
+        <input type="time" class="finp" id="blk-start" value="08:00"/>
+      </div>
+      <div class="fg">
+        <div class="flbl">End Time</div>
+        <input type="time" class="finp" id="blk-end" value="13:00"/>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="flbl">Category / Accent Color</div>
+      <select class="finp" id="blk-color" style="background:var(--bg3); color:var(--text); border:1px solid var(--border2); border-radius:6px; padding:7px 10px;">
+        <option value="rest">Rest / General (Gray)</option>
+        <option value="tech">Focus Zone / Academics (Indigo)</option>
+        <option value="body">Body / Exercise (Green)</option>
+        <option value="looks">Looks / Skincare (Pink)</option>
+        <option value="bible">Bible Study (Amber)</option>
+        <option value="contest">Contest / Codeforces (Red)</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="flbl">Notes (Optional)</div>
+      <input type="text" class="finp" id="blk-notes" placeholder="e.g. review MERN stack concepts"/>
+    </div>
+    <div class="gm-actions">
+      <button class="gm-cancel" onclick="closeBlockModal()">Cancel</button>
+      <button class="gm-submit" onclick="submitBlockForm()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Conflict Warning Modal -->
+<div class="gym-modal-overlay" id="conflict-modal-overlay">
+  <div class="gym-modal" style="max-width: 420px;">
+    <h3 style="color: var(--amber);">⚠️ Schedule Conflict Detected</h3>
+    <p id="conflict-text" style="font-size: 0.78rem; color: var(--text2); line-height: 1.5; margin-bottom: 16px;"></p>
+    <div class="fg" style="margin-bottom: 16px;">
+      <div class="flbl" style="margin-bottom: 8px;">How would you like to resolve this?</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="dcbtn" id="btn-resolve-adjust" style="text-align: left; padding: 10px; font-size: 0.75rem; border-color: var(--green); color: var(--green);" onclick="resolveConflict('adjust')">
+          <strong>Adjust existing block(s)</strong><br/>
+          <span style="font-size: 0.65rem; color: var(--text2);">Automatically shrink/shift existing blocks to fit the new time.</span>
+        </button>
+        <button class="dcbtn" id="btn-resolve-keep" style="text-align: left; padding: 10px; font-size: 0.75rem; border-color: var(--accent); color: var(--text);" onclick="resolveConflict('keep')">
+          <strong>Keep overlap</strong><br/>
+          <span style="font-size: 0.65rem; color: var(--text2);">Save the block as-is, leaving overlapping times.</span>
+        </button>
+        <button class="dcbtn" id="btn-resolve-cancel" style="text-align: left; padding: 10px; font-size: 0.75rem; border-color: var(--border2); color: var(--text2);" onclick="resolveConflict('cancel')">
+          <strong>Cancel creation</strong><br/>
+          <span style="font-size: 0.65rem; color: var(--text3);">Go back and change the block times.</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 const API='';
@@ -435,63 +497,62 @@ const MOT=[
   "Nobody remembers your excuses. Everybody sees your results.",
   "Pain is temporary. Progress is permanent."
 ];
-const SCHED={
-  A:[
-    {id:'wakeup',t:'5:00–5:20',l:'Wake up + hydrate',c:'rest',col:'general',s:['Drink 500ml water','Brush teeth','Quick freshen up']},
-    {id:'gym',t:'5:20–7:05',l:'Walk to gym + gym session',c:'body',col:'gym',s:['Walk to gym (15 min)','Warm up (10 min)','Main lift session','Cool down / stretch']},
-    {id:'morning',t:'7:05–8:00',l:'Shower + morning skincare + breakfast',c:'looks',col:'looksmax',s:['Shower','Cleanser','Toner','Moisturiser','SPF','Breakfast (high protein)']},
-    {id:'dsa',t:'8:00–10:30',l:'DSA deep work',c:'tech',col:'DSA',s:[]},
-    {id:'break1',t:'10:30–10:45',l:'Break',c:'rest',col:'general',s:['Walk around','Hydrate','No doom-scroll']},
-    {id:'mern1',t:'10:45–1:00',l:'MERN stack',c:'tech',col:'MERN',s:[]},
-    {id:'lunch',t:'1:00–1:45',l:'Lunch + rest',c:'rest',col:'general',s:['Eat (high protein)','Short nap if needed']},
-    {id:'mern2',t:'1:45–4:00',l:'MERN stack cont.',c:'tech',col:'MERN',s:[]},
-    {id:'break2',t:'4:00–4:15',l:'Break + snack',c:'rest',col:'general',s:['Fruit / nuts','Stretch']},
-    {id:'walk',t:'4:15–4:45',l:'Evening walk',c:'body',col:'gym',s:['30 min brisk walk']},
-    {id:'cyber',t:'4:45–7:00',l:'Cybersecurity',c:'tech',col:'Cybersecurity',s:[]},
-    {id:'dinner',t:'7:00–7:45',l:'Dinner',c:'rest',col:'general',s:['Eat (high protein, light carbs)']},
-    {id:'review',t:'7:45–8:10',l:'Review + plan tomorrow',c:'rest',col:'general',s:['What did you solve today?','What to push next session?']},
-    {id:'nightlook',t:'8:10–8:40',l:'Night shower + skincare',c:'looks',col:'looksmax',s:['Long shower (20 min)','Cleanser','Toner','Retinol','Night cream','Facial exercises (jaw, cheeks, neck)','Voice maxxing (10 min)']},
-    {id:'bible',t:'8:40–9:10',l:'Bible study',c:'bible',col:'bible',s:['Read passage','Reflect / journal']},
-    {id:'sleep',t:'9:30 PM',l:'Lights out',c:'rest',col:'general',s:['Phone down','Sleep']}
-  ],
-  B:[
-    {id:'wakeup',t:'5:00–5:20',l:'Wake up + hydrate',c:'rest',col:'general',s:['Drink 500ml water','Brush teeth','Quick freshen up']},
-    {id:'gym',t:'5:20–7:05',l:'Walk to gym + gym session',c:'body',col:'gym',s:['Walk to gym (15 min)','Warm up (10 min)','Main lift session','Cool down / stretch']},
-    {id:'morning',t:'7:05–8:00',l:'Shower + morning skincare + breakfast',c:'looks',col:'looksmax',s:['Shower','Cleanser','Toner','Moisturiser','SPF','Breakfast (high protein)']},
-    {id:'cf',t:'8:00–10:30',l:'Codeforces / competitive',c:'tech',col:'Codeforces',s:[]},
-    {id:'break1',t:'10:30–10:45',l:'Break',c:'rest',col:'general',s:['Walk around','Hydrate','No doom-scroll']},
-    {id:'cyber1',t:'10:45–1:00',l:'Cybersecurity',c:'tech',col:'Cybersecurity',s:[]},
-    {id:'lunch',t:'1:00–1:45',l:'Lunch + rest',c:'rest',col:'general',s:['Eat (high protein)','Short nap if needed']},
-    {id:'cyber2',t:'1:45–4:00',l:'Cybersecurity cont.',c:'tech',col:'Cybersecurity',s:[]},
-    {id:'break2',t:'4:00–4:15',l:'Break + snack',c:'rest',col:'general',s:['Fruit / nuts','Stretch']},
-    {id:'walk',t:'4:15–4:45',l:'Evening walk',c:'body',col:'gym',s:['30 min brisk walk']},
-    {id:'dsarev',t:'4:45–7:00',l:'DSA revision / weak topics',c:'tech',col:'DSA',s:[]},
-    {id:'dinner',t:'7:00–7:45',l:'Dinner',c:'rest',col:'general',s:['Eat (high protein, light carbs)']},
-    {id:'review',t:'7:45–8:10',l:'Review + plan tomorrow',c:'rest',col:'general',s:['What did you solve today?','What to push next session?']},
-    {id:'nightlook',t:'8:10–8:40',l:'Night shower + skincare',c:'looks',col:'looksmax',s:['Long shower (20 min)','Cleanser','Toner','Retinol','Night cream','Facial exercises (jaw, cheeks, neck)','Voice maxxing (10 min)']},
-    {id:'bible',t:'8:40–9:10',l:'Bible study',c:'bible',col:'bible',s:['Read passage','Reflect / journal']},
-    {id:'sleep',t:'9:30 PM',l:'Lights out',c:'rest',col:'general',s:['Phone down','Sleep']}
-  ],
-  sunday:[
-    {id:'wakeup',t:'6:00–6:30',l:'Slow wake + hydrate',c:'rest',col:'general',s:['Drink water','Freshen up']},
-    {id:'gym',t:'6:30–8:15',l:'Walk to gym + gym session',c:'body',col:'gym',s:['Walk to gym','Warm up','Main lift','Cool down']},
-    {id:'morning',t:'8:15–9:00',l:'Shower + breakfast',c:'looks',col:'looksmax',s:['Shower','Skincare','Breakfast']},
-    {id:'study',t:'9:00–12:00',l:'DSA / CF upsolve + editorial reading',c:'tech',col:'DSA',s:[]},
-    {id:'lunch',t:'12:00–1:00',l:'Lunch',c:'rest',col:'general',s:['Eat well']},
-    {id:'free',t:'1:00–6:00',l:'Free time — go out, social, errands',c:'rest',col:'general',s:['Go out / rest']},
-    {id:'dinner',t:'6:00–7:00',l:'Dinner',c:'rest',col:'general',s:['Eat']},
-    {id:'nightlook',t:'7:30–8:10',l:'Night shower + full skincare',c:'looks',col:'looksmax',s:['Shower','Cleanser','Toner','Retinol','Night cream','Facial exercises','Voice maxxing']},
-    {id:'bible',t:'8:10–8:40',l:'Bible study',c:'bible',col:'bible',s:['Read passage','Reflect']},
-    {id:'sleep',t:'9:00 PM',l:'Lights out',c:'rest',col:'general',s:['Phone down','Sleep']}
-  ]
-};
-const CBLOCKS=[
-  {id:'warmup',t:'4:45–6:30',l:'Contest warm-up / revision',c:'tech',col:'Codeforces',s:[]},
-  {id:'dinner',t:'6:30–8:00',l:'Dinner + wind down',c:'rest',col:'general',s:['Eat well','Relax']},
-  {id:'contest',t:'8:00–9:30',l:'Codeforces Contest',c:'contest',col:'Codeforces',s:['Login to Codeforces','Read all problems first','Solve A to B to C+','Track time']},
-  {id:'nightlook',t:'9:30–10:00',l:'Quick shower + skincare',c:'looks',col:'looksmax',s:['Shower','Cleanser','Moisturiser']},
-  {id:'sleep',t:'10:00 PM',l:'Lights out',c:'rest',col:'general',s:['Phone down','Sleep']}
+const DEFAULT_TEMPLATE = [
+  { id: 'morning', startTime: '05:00', endTime: '08:00', label: 'Flexible Morning Block', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Drink 500ml water', done: false, order: 0 },
+    { id: 'st2', label: 'Brush teeth', done: false, order: 1 },
+    { id: 'st3', label: 'Quick freshen up', done: false, order: 2 },
+    { id: 'st4', label: 'Shower', done: false, order: 3 },
+    { id: 'st5', label: 'Skincare routine', done: false, order: 4 },
+    { id: 'st6', label: 'Breakfast (high protein)', done: false, order: 5 }
+  ]},
+  { id: 'focus1', startTime: '08:00', endTime: '13:00', label: 'Focus Zone', colorClass: 'tech', subtasks: [
+    { id: 'st1', label: 'Deep work session 1', done: false, order: 0 },
+    { id: 'st2', label: 'Short break & hydrate', done: false, order: 1 },
+    { id: 'st3', label: 'Deep work session 2', done: false, order: 2 }
+  ]},
+  { id: 'lunch', startTime: '13:00', endTime: '14:00', label: 'Lunch / Recovery', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Eat lunch (high protein)', done: false, order: 0 },
+    { id: 'st2', label: 'Rest / Short nap', done: false, order: 1 }
+  ]},
+  { id: 'focus2', startTime: '14:00', endTime: '17:30', label: 'Focus Zone', colorClass: 'tech', subtasks: [
+    { id: 'st1', label: 'Deep work session 3', done: false, order: 0 },
+    { id: 'st2', label: 'Short break & stretch', done: false, order: 1 }
+  ]},
+  { id: 'cardio', startTime: '17:30', endTime: '19:00', label: 'Cardio', colorClass: 'body', subtasks: [
+    { id: 'st1', label: 'Walk or run (brisk pace)', done: false, order: 0 },
+    { id: 'st2', label: 'Stretch & cool down', done: false, order: 1 }
+  ]},
+  { id: 'evening', startTime: '19:00', endTime: '22:00', label: 'Flexible Evening Block', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Dinner (light carbs)', done: false, order: 0 },
+    { id: 'st2', label: 'Review & plan tomorrow', done: false, order: 1 },
+    { id: 'st3', label: 'Night shower & skincare', done: false, order: 2 },
+    { id: 'st4', label: 'Bible study / Reading', done: false, order: 3 },
+    { id: 'st5', label: 'Sleep (phone down)', done: false, order: 4 }
+  ]}
 ];
+
+function to12h(timeStr) {
+  if (!timeStr) return '';
+  const [hStr, mStr] = timeStr.split(':');
+  let h = parseInt(hStr, 10);
+  const m = mStr;
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${m}`;
+}
+
+function timeToMins(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minsToHHMM(m) {
+  const h = Math.floor(m / 60);
+  const mins = m % 60;
+  return `${String(h).padStart(2,'0')}:${String(mins).padStart(2,'0')}`;
+}
+
 const RQS=[
   {id:'r1',type:'mcq',q:'How focused were you today?',opts:['Very focused — deep work all day','Mostly focused','Average — half in half out','Distracted']},
   {id:'r2',type:'mcq',q:'Did you complete your gym session?',opts:['Yes, full session','Yes, cut it short','Partial — just walk','Skipped']},
@@ -503,13 +564,13 @@ const RQS=[
   {id:'r7',type:'text',q:'What will you do differently tomorrow?'}
 ];
 
-let curDate=TODAY,lrDate=TODAY,dt='A',contest=false,taskData={},slpQ=3,timers={};
+let curDate=TODAY,lrDate=TODAY,dailyBlocks=[],isUnsavedTemplate=true,slpQ=3,timers={};
 
 window.addEventListener('load',()=>{
   buildWeek();
   loadAff();
   document.getElementById('motstrip').textContent=MOT[Math.floor(Math.random()*MOT.length)];
-  autoDetect();
+  updTitle();
   loadTasks(curDate);
   buildRF();
   document.getElementById('lrdp').value=TODAY;
@@ -526,30 +587,12 @@ function loadAff(){
   document.getElementById('affsrc').textContent=i.s;
 }
 
-function autoDetect(){
-  const d=new Date(curDate+'T12:00:00').getDay();
-  dt=d===0?'sunday':[1,3,5].includes(d)?'A':'B';
-  updBtns();updTitle();
-}
-
-function updBtns(){
-  ['A','B','sunday'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',dt===x));
-  document.getElementById('btn-contest').classList.toggle('active',contest);
-}
-
 function updTitle(){
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const d=new Date(curDate+'T12:00:00');
   document.getElementById('daytitle').textContent=days[d.getDay()];
   document.getElementById('daysub').textContent=curDate===TODAY?'Today · '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}):d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
 }
-
-async function saveDayConfig(){
-  try{await fetch(`${API}/api/dayconfig`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:curDate,dayType:dt,contest})});}catch(e){}
-}
-
-function setDT(x){dt=x;contest=false;updBtns();saveDayConfig();loadTasks(curDate);}
-function togContest(){contest=!contest;updBtns();saveDayConfig();loadTasks(curDate);}
 
 function buildWeek(){
   const bar=document.getElementById('wkbar');bar.innerHTML='';
@@ -573,268 +616,581 @@ function buildWeek(){
 async function selDay(iso){
   curDate=iso;
   document.querySelectorAll('.wday').forEach(el=>el.classList.toggle('active',el.dataset.date===iso));
-  // Try to restore the saved dayconfig for this date
-  try{
-    const r=await fetch(`${API}/api/dayconfig/${iso}`);
-    const cfg=await r.json();
-    if(cfg&&cfg.dayType){dt=cfg.dayType;contest=!!cfg.contest;}
-    else{
-      const d=new Date(iso+'T12:00:00').getDay();
-      dt=d===0?'sunday':[1,3,5].includes(d)?'A':'B';
-      contest=false;
-    }
-  }catch(e){
-    const d=new Date(iso+'T12:00:00').getDay();
-    dt=d===0?'sunday':[1,3,5].includes(d)?'A':'B';
-    contest=false;
-  }
-  updBtns();updTitle();loadTasks(iso);
+  updTitle();
+  loadTasks(iso);
 }
 
-async function loadTasks(date){
-  try{const r=await fetch(`${API}/api/tasks/${date}`);const arr=await r.json();taskData={};arr.forEach(t=>{taskData[t.blockId]=t;});}catch(e){taskData={};}
+async function loadTasks(date) {
+  try {
+    const r = await fetch(`${API}/api/tasks/${date}`);
+    const arr = await r.json();
+    if (arr && arr.length > 0) {
+      dailyBlocks = arr;
+      isUnsavedTemplate = false;
+    } else {
+      dailyBlocks = JSON.parse(JSON.stringify(DEFAULT_TEMPLATE));
+      isUnsavedTemplate = true;
+    }
+  } catch (e) {
+    dailyBlocks = JSON.parse(JSON.stringify(DEFAULT_TEMPLATE));
+    isUnsavedTemplate = true;
+  }
   renderBlocks();
 }
 
-function getSched(){
-  let s=JSON.parse(JSON.stringify(SCHED[dt]));
-  if(contest){
-    const wi=s.findIndex(b=>b.id==='walk');
-    s=s.slice(0,wi+1).concat(JSON.parse(JSON.stringify(CBLOCKS)));
-  }
-  return s;
-}
-
-function getSubs(bid){
-  if(taskData[bid])return taskData[bid].subtasks;
-  const b=getSched().find(x=>x.id===bid);
-  return b?b.s.map((s,i)=>({id:'st'+i,label:s,done:false,isDefault:true,order:i})):[];
-}
-
-function renderBlocks(){
-  const sc=getSched();
-  const c=document.getElementById('taskblocks');c.innerHTML='';
-  sc.forEach(bl=>{
-    const subs=getSubs(bl.id);
-    const dn=subs.filter(s=>s.done).length;
-    const allD=subs.length>0&&dn===subs.length;
-    const div=document.createElement('div');
-    div.className='tblock';div.dataset.bid=bl.id;
-    div.innerHTML=`<div class="bheader" onclick="togBlock(this)"><div class="btime">${bl.t}</div><div class="bstripe c-${bl.c}"></div><div class="btitle">${bl.l}</div><div class="bmeta"><span class="bcnt">${dn}/${subs.length}</span><div class="bca ${allD?'done':''}" onclick="togAll(event,'${bl.id}')">${allD?'&#10003;':''}</div><span class="bchev">&#9660;</span></div></div><div class="bbody" id="bb-${bl.id}"><div id="sl-${bl.id}"></div><div class="addrow"><input class="addinp" id="inp-${bl.id}" placeholder="+ add subtask..." onkeydown="if(event.key==='Enter')addSub('${bl.id}')"/><button class="addbtn" onclick="addSub('${bl.id}')">+</button></div></div>`;
+function renderBlocks() {
+  // Sort blocks chronologically by start time
+  dailyBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  
+  const c = document.getElementById('taskblocks');
+  c.innerHTML = '';
+  
+  dailyBlocks.forEach(bl => {
+    const bid = bl._id || bl.id;
+    const subs = bl.subtasks || [];
+    const dn = subs.filter(s => s.done).length;
+    const allD = subs.length > 0 && dn === subs.length;
+    const div = document.createElement('div');
+    div.className = 'tblock';
+    div.dataset.bid = bid;
+    
+    const timeDisplay = to12h(bl.startTime) + '–' + to12h(bl.endTime);
+    
+    div.innerHTML = `
+      <div class="bheader" onclick="togBlock(this)">
+        <div class="btime">${timeDisplay}</div>
+        <div class="bstripe c-${bl.colorClass || 'rest'}"></div>
+        <div class="btitle">${bl.blockLabel || bl.label}</div>
+        <div class="bmeta">
+          <span class="bcnt">${dn}/${subs.length}</span>
+          <div class="bca ${allD ? 'done' : ''}" onclick="togAll(event,'${bid}')">${allD ? '&#10003;' : ''}</div>
+          <span class="bchev">&#9660;</span>
+        </div>
+      </div>
+      <div class="bbody" id="bb-${bid}">
+        ${bl.notes ? `<div class="bnotes" style="font-size:0.75rem; color:var(--text2); padding:8px 14px; border-bottom:1px solid var(--border); font-style:italic;">Notes: ${bl.notes}</div>` : ''}
+        <div id="sl-${bid}"></div>
+        <div class="addrow">
+          <input class="addinp" id="inp-${bid}" placeholder="+ add subtask..." onkeydown="if(event.key==='Enter')addSub('${bid}')"/>
+          <button class="addbtn" onclick="addSub('${bid}')">+</button>
+        </div>
+        <div class="bctrls" style="display:flex; justify-content:flex-end; gap:8px; padding:8px 14px; border-top:1px solid var(--border)">
+          <button class="dcbtn" onclick="openEditBlockModal('${bid}')">Edit Block</button>
+          <button class="dcbtn" style="border-color:#f8717150; color:#f87171" onclick="deleteBlock('${bid}')">Delete Block</button>
+        </div>
+      </div>
+    `;
     c.appendChild(div);
-    renderSubs(bl.id,subs);
+    renderSubs(bid, subs);
   });
+  
   updProg();
 }
 
-function renderSubs(bid,subs){
-  const c=document.getElementById('sl-'+bid);if(!c)return;c.innerHTML='';
-  [...subs].sort((a,b)=>(a.order||0)-(b.order||0)).forEach(s=>{
-    const row=document.createElement('div');
-    row.className='strow';row.draggable=true;row.dataset.sid=s.id;
-    row.innerHTML=`<span class="stdrag">&#10269;</span><div class="stcbwrap"><input type="checkbox" class="stcb" ${s.done?'checked':''} onchange="togSub('${bid}','${s.id}',this.checked)"/><div class="stbox">${s.done?'&#10003;':''}</div></div><span class="stlbl ${s.done?'struck':''}">${s.label}</span><button class="stdel" onclick="delSub('${bid}','${s.id}')">&#10005;</button>`;
-    row.addEventListener('dragstart',()=>row.classList.add('dragging'));
-    row.addEventListener('dragend',()=>{row.classList.remove('dragging');saveOrd(bid);});
-    row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('dragover');});
-    row.addEventListener('dragleave',()=>row.classList.remove('dragover'));
-    row.addEventListener('drop',e=>{e.preventDefault();row.classList.remove('dragover');const dr=c.querySelector('.dragging');if(dr&&dr!==row)c.insertBefore(dr,row);});
+function renderSubs(bid, subs) {
+  const c = document.getElementById('sl-' + bid);
+  if (!c) return;
+  c.innerHTML = '';
+  
+  [...subs].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'strow';
+    row.draggable = true;
+    row.dataset.sid = s.id;
+    row.innerHTML = `
+      <span class="stdrag">&#10269;</span>
+      <div class="stcbwrap">
+        <input type="checkbox" class="stcb" ${s.done ? 'checked' : ''} onchange="togSub('${bid}','${s.id}',this.checked)"/>
+        <div class="stbox">${s.done ? '&#10003;' : ''}</div>
+      </div>
+      <span class="stlbl ${s.done ? 'struck' : ''}">${s.label}</span>
+      <button class="stdel" onclick="delSub('${bid}','${s.id}')">&#10005;</button>
+    `;
+    row.addEventListener('dragstart', () => row.classList.add('dragging'));
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      saveOrd(bid);
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      row.classList.add('dragover');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('dragover'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('dragover');
+      const dr = c.querySelector('.dragging');
+      if (dr && dr !== row) c.insertBefore(dr, row);
+    });
     c.appendChild(row);
   });
 }
 
-async function togSub(bid,sid,done){
-  const subs=getSubs(bid);
-  const s=subs.find(x=>x.id===sid);if(s)s.done=done;
-  const row=document.querySelector(`[data-sid="${sid}"]`);
-  if(row){row.querySelector('.stbox').innerHTML=done?'&#10003;':'';row.querySelector('.stlbl').classList.toggle('struck',done);}
-  await saveBlock(bid,subs);updBH(bid,subs);updProg();
+async function ensureAllBlocksSaved() {
+  if (isUnsavedTemplate) {
+    await Promise.all(dailyBlocks.map(async (bl, index) => {
+      const payload = {
+        date: curDate,
+        blockLabel: bl.blockLabel || bl.label,
+        blockId: bl.id || bl.blockId,
+        startTime: bl.startTime,
+        endTime: bl.endTime,
+        colorClass: bl.colorClass,
+        collection: bl.collection || 'general',
+        subtasks: bl.subtasks,
+        notes: bl.notes || '',
+        order: index
+      };
+      try {
+        const r = await fetch(`${API}/api/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const saved = await r.json();
+        bl._id = saved._id;
+      } catch (e) {
+        console.error(e);
+      }
+    }));
+    isUnsavedTemplate = false;
+  }
 }
 
-async function delSub(bid,sid){
-  const subs=getSubs(bid).filter(s=>s.id!==sid);
-  await saveBlock(bid,subs);renderSubs(bid,subs);updBH(bid,subs);updProg();
+async function saveBlockToDb(bl) {
+  const payload = {
+    date: curDate,
+    blockId: bl.blockId || bl.id,
+    blockLabel: bl.blockLabel || bl.label,
+    startTime: bl.startTime,
+    endTime: bl.endTime,
+    colorClass: bl.colorClass,
+    collection: bl.collection || 'general',
+    subtasks: bl.subtasks || [],
+    notes: bl.notes || '',
+    order: bl.order || 0
+  };
+  try {
+    const url = bl._id ? `${API}/api/tasks/${bl._id}` : `${API}/api/tasks`;
+    const method = bl._id ? 'PUT' : 'POST';
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return await r.json();
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-async function addSub(bid){
-  const inp=document.getElementById('inp-'+bid);
-  const label=inp.value.trim();if(!label)return;
-  const subs=getSubs(bid);
-  subs.push({id:'st'+Date.now(),label,done:false,isDefault:false,order:subs.length});
-  await saveBlock(bid,subs);renderSubs(bid,subs);updBH(bid,subs);inp.value='';
-}
-
-async function saveOrd(bid){
-  const c=document.getElementById('sl-'+bid);
-  const subs=getSubs(bid);
-  c.querySelectorAll('.strow').forEach((row,i)=>{const s=subs.find(x=>x.id===row.dataset.sid);if(s)s.order=i;});
-  await saveBlock(bid,subs);
-}
-
-async function togAll(e,bid){
-  e.stopPropagation();
-  const subs=getSubs(bid);const allD=subs.every(s=>s.done);
-  subs.forEach(s=>s.done=!allD);
-  await saveBlock(bid,subs);renderSubs(bid,subs);updBH(bid,subs);updProg();
-}
-
-const CM={tech:'academics',body:'health',looks:'health',rest:'general',bible:'general',contest:'academics'};
-async function ensureAllBlocksSaved(){
-  const sc=getSched();
-  const missing=sc.filter(bl=>!taskData[bl.id]);
-  if(!missing.length)return;
-  await Promise.all(missing.map(async bl=>{
-    const subs=bl.s.map((s,i)=>({id:'st'+i,label:s,done:false,isDefault:true,order:i}));
-    const payload={date:curDate,dayType:dt,blockId:bl.id,blockLabel:bl.l,category:CM[bl.c]||'general',collection:bl.col||'general',subtasks:subs};
-    try{
-      const r=await fetch(`${API}/api/tasks`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      taskData[bl.id]=await r.json();
-    }catch(e){}
-  }));
-}
-async function saveBlock(bid,subs){
+async function togSub(bid, sid, done) {
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  const s = bl.subtasks.find(x => x.id === sid);
+  if (s) s.done = done;
+  
+  const row = document.querySelector(`[data-sid="${sid}"]`);
+  if (row) {
+    row.querySelector('.stbox').innerHTML = done ? '&#10003;' : '';
+    row.querySelector('.stlbl').classList.toggle('struck', done);
+  }
+  
   await ensureAllBlocksSaved();
-  const bl=getSched().find(b=>b.id===bid)||{};
-  const payload={date:curDate,dayType:dt,blockId:bid,blockLabel:bl.l||bid,category:CM[bl.c]||'general',collection:bl.col||'general',subtasks:subs};
-  try{
-    const saved=taskData[bid];
-    const url=saved?._id?`${API}/api/tasks/${saved._id}`:`${API}/api/tasks`;
-    const method=saved?._id?'PUT':'POST';
-    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    taskData[bid]=await r.json();
-  }catch(e){}
+  await saveBlockToDb(bl);
+  updBH(bid, bl.subtasks);
+  updProg();
 }
 
-function updBH(bid,subs){
-  const bl=document.querySelector(`[data-bid="${bid}"]`);if(!bl)return;
-  const dn=subs.filter(s=>s.done).length;const allD=subs.length>0&&dn===subs.length;
-  bl.querySelector('.bcnt').textContent=`${dn}/${subs.length}`;
-  const ca=bl.querySelector('.bca');ca.className='bca'+(allD?' done':'');ca.innerHTML=allD?'&#10003;':'';
+async function delSub(bid, sid) {
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  bl.subtasks = bl.subtasks.filter(s => s.id !== sid);
+  
+  await ensureAllBlocksSaved();
+  await saveBlockToDb(bl);
+  renderSubs(bid, bl.subtasks);
+  updBH(bid, bl.subtasks);
+  updProg();
 }
 
-function updProg(){
-  const sc=getSched();let total=0,done=0;
-  sc.forEach(b=>{const s=getSubs(b.id);total+=s.length;done+=s.filter(x=>x.done).length;});
-  const pct=total?Math.round((done/total)*100):0;
-  document.getElementById('proglbl').textContent=`${done} / ${total} tasks`;
-  document.getElementById('progpct').textContent=pct+'%';
-  document.getElementById('progfill').style.width=pct+'%';
+async function addSub(bid) {
+  const inp = document.getElementById('inp-' + bid);
+  const label = inp.value.trim();
+  if (!label) return;
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  if (!bl.subtasks) bl.subtasks = [];
+  bl.subtasks.push({ id: 'st' + Date.now(), label, done: false, isDefault: false, order: bl.subtasks.length });
+  
+  await ensureAllBlocksSaved();
+  await saveBlockToDb(bl);
+  renderSubs(bid, bl.subtasks);
+  updBH(bid, bl.subtasks);
+  inp.value = '';
 }
 
-function togBlock(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open');}
+async function saveOrd(bid) {
+  const c = document.getElementById('sl-' + bid);
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  c.querySelectorAll('.strow').forEach((row, i) => {
+    const s = bl.subtasks.find(x => x.id === row.dataset.sid);
+    if (s) s.order = i;
+  });
+  await ensureAllBlocksSaved();
+  await saveBlockToDb(bl);
+}
 
-function onLRChange(){lrDate=document.getElementById('lrdp').value;loadLR(lrDate);}
-function goToday(){lrDate=TODAY;document.getElementById('lrdp').value=TODAY;loadLR(TODAY);}
+async function togAll(e, bid) {
+  e.stopPropagation();
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  const allD = bl.subtasks.every(s => s.done);
+  bl.subtasks.forEach(s => s.done = !allD);
+  
+  await ensureAllBlocksSaved();
+  await saveBlockToDb(bl);
+  renderSubs(bid, bl.subtasks);
+  updBH(bid, bl.subtasks);
+  updProg();
+}
 
-async function loadLR(date){
-  try{
-    const r=await fetch(`${API}/api/sleep`);const all=await r.json();
-    const rec=all.find(x=>x.date===date);
-    if(rec){document.getElementById('slpBed').value=rec.bedtime||'21:30';document.getElementById('slpWake').value=rec.wakeTime||'05:00';document.getElementById('slpNotes').value=rec.notes||'';setSlpQ(rec.quality||3);}
-    else{document.getElementById('slpBed').value='21:30';document.getElementById('slpWake').value='05:00';document.getElementById('slpNotes').value='';setSlpQ(3);}
+function updBH(bid, subs) {
+  const bl = document.querySelector(`[data-bid="${bid}"]`);
+  if (!bl) return;
+  const dn = subs.filter(s => s.done).length;
+  const allD = subs.length > 0 && dn === subs.length;
+  bl.querySelector('.bcnt').textContent = `${dn}/${subs.length}`;
+  const ca = bl.querySelector('.bca');
+  ca.className = 'bca' + (allD ? ' done' : '');
+  ca.innerHTML = allD ? '&#10003;' : '';
+}
+
+function updProg() {
+  let total = 0, done = 0;
+  dailyBlocks.forEach(b => {
+    const s = b.subtasks || [];
+    total += s.length;
+    done += s.filter(x => x.done).length;
+  });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('proglbl').textContent = `${done} / ${total} tasks`;
+  document.getElementById('progpct').textContent = pct + '%';
+  document.getElementById('progfill').style.width = pct + '%';
+}
+
+function togBlock(h) {
+  h.classList.toggle('open');
+  h.nextElementSibling.classList.toggle('open');
+}
+
+// Block Modal Management
+let currentEditBlockId = null;
+let pendingBlockData = null;
+let pendingConflicts = null;
+
+function showAddBlockModal() {
+  currentEditBlockId = null;
+  document.getElementById('block-modal-title').textContent = 'Add Schedule Block';
+  document.getElementById('blk-title').value = '';
+  document.getElementById('blk-start').value = '08:00';
+  document.getElementById('blk-end').value = '09:00';
+  document.getElementById('blk-notes').value = '';
+  
+  const colors = ['tech', 'body', 'looks', 'rest', 'bible', 'contest'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  document.getElementById('blk-color').value = randomColor;
+  
+  document.getElementById('block-modal-overlay').classList.add('show');
+}
+
+function openEditBlockModal(bid) {
+  const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
+  if (!bl) return;
+  currentEditBlockId = bid;
+  document.getElementById('block-modal-title').textContent = 'Edit Schedule Block';
+  document.getElementById('blk-title').value = bl.blockLabel || bl.label || '';
+  document.getElementById('blk-start').value = bl.startTime || '08:00';
+  document.getElementById('blk-end').value = bl.endTime || '09:00';
+  document.getElementById('blk-color').value = bl.colorClass || 'rest';
+  document.getElementById('blk-notes').value = bl.notes || '';
+  
+  document.getElementById('block-modal-overlay').classList.add('show');
+}
+
+function closeBlockModal() {
+  currentEditBlockId = null;
+  document.getElementById('block-modal-overlay').classList.remove('show');
+}
+
+function closeConflictModal() {
+  document.getElementById('conflict-modal-overlay').classList.remove('show');
+}
+
+function checkConflicts(newStart, newEnd, excludeId) {
+  const ns = timeToMins(newStart);
+  const ne = timeToMins(newEnd);
+  
+  const conflicts = [];
+  dailyBlocks.forEach(bl => {
+    const bid = bl._id || bl.id;
+    if (excludeId && bid === excludeId) return;
+    
+    const cs = timeToMins(bl.startTime);
+    const ce = timeToMins(bl.endTime);
+    
+    if (ns < ce && ne > cs) {
+      conflicts.push(bl);
+    }
+  });
+  return conflicts;
+}
+
+function submitBlockForm() {
+  const title = document.getElementById('blk-title').value.trim();
+  const start = document.getElementById('blk-start').value;
+  const end = document.getElementById('blk-end').value;
+  const color = document.getElementById('blk-color').value;
+  const notes = document.getElementById('blk-notes').value.trim();
+  
+  if (!title || !start || !end) {
+    toast('Please fill in Title, Start Time, and End Time');
+    return;
+  }
+  
+  if (start >= end) {
+    toast('Start time must be before End time');
+    return;
+  }
+  
+  let collection = 'general';
+  if (color === 'tech') collection = 'DSA';
+  else if (color === 'body') collection = 'gym';
+  else if (color === 'looks') collection = 'looksmax';
+  else if (color === 'bible') collection = 'bible';
+  else if (color === 'contest') collection = 'Codeforces';
+  
+  const existingBl = currentEditBlockId ? dailyBlocks.find(b => (b._id || b.id) === currentEditBlockId) : null;
+  
+  const blockData = {
+    blockLabel: title,
+    startTime: start,
+    endTime: end,
+    colorClass: color,
+    collection: collection,
+    notes: notes,
+    subtasks: existingBl ? existingBl.subtasks : []
+  };
+  
+  if (currentEditBlockId) {
+    blockData._id = existingBl._id;
+    blockData.id = existingBl.id;
+    blockData.blockId = existingBl.blockId || existingBl.id;
+  } else {
+    blockData.blockId = 'blk_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  }
+  
+  const conflicts = checkConflicts(start, end, currentEditBlockId);
+  if (conflicts.length > 0) {
+    pendingBlockData = blockData;
+    pendingConflicts = conflicts;
+    
+    const conflictNames = conflicts.map(c => `${c.blockLabel || c.label} (${to12h(c.startTime)}–${to12h(c.endTime)})`).join(', ');
+    document.getElementById('conflict-text').innerHTML = `The new block time overlaps with the following existing block(s):<br/><strong>${conflictNames}</strong>`;
+    document.getElementById('conflict-modal-overlay').classList.add('show');
+  } else {
+    saveNewBlockDirectly(blockData);
+  }
+}
+
+async function saveNewBlockDirectly(blockData) {
+  await ensureAllBlocksSaved();
+  await saveBlockToDb(blockData);
+  closeBlockModal();
+  loadTasks(curDate);
+  toast('Block saved');
+}
+
+async function resolveConflict(action) {
+  if (!pendingBlockData) return;
+  
+  if (action === 'cancel') {
+    closeConflictModal();
+    return;
+  }
+  
+  if (action === 'keep') {
+    await saveNewBlockDirectly(pendingBlockData);
+    closeConflictModal();
+    return;
+  }
+  
+  if (action === 'adjust') {
+    closeConflictModal();
+    await handleSaveBlockWithAdjustment(pendingBlockData, pendingConflicts);
+    toast('Block saved and conflicts resolved');
+  }
+}
+
+async function handleSaveBlockWithAdjustment(newBlock, conflicts) {
+  await ensureAllBlocksSaved();
+  
+  for (const bl of conflicts) {
+    const cs = timeToMins(bl.startTime);
+    const ce = timeToMins(bl.endTime);
+    const ns = timeToMins(newBlock.startTime);
+    const ne = timeToMins(newBlock.endTime);
+    
+    if (ns <= cs && ne >= ce) {
+      if (bl._id) {
+        try {
+          await fetch(`${API}/api/tasks/${bl._id}`, { method: 'DELETE' });
+        } catch (e) { console.error(e); }
+      }
+    } else {
+      if (ns > cs && ne < ce) {
+        bl.endTime = minsToHHMM(ns);
+      } else if (ns > cs && ns < ce) {
+        bl.endTime = minsToHHMM(ns);
+      } else if (ne > cs && ne < ce) {
+        bl.startTime = minsToHHMM(ne);
+      }
+      
+      try {
+        await fetch(`${API}/api/tasks/${bl._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bl)
+        });
+      } catch (e) { console.error(e); }
+    }
+  }
+  
+  await saveBlockToDb(newBlock);
+  closeBlockModal();
+  loadTasks(curDate);
+}
+
+async function deleteBlock(bid) {
+  if (!confirm('Are you sure you want to delete this block and all its subtasks?')) return;
+  
+  const blIndex = dailyBlocks.findIndex(b => (b._id || b.id) === bid);
+  if (blIndex === -1) return;
+  
+  const bl = dailyBlocks[blIndex];
+  
+  if (isUnsavedTemplate) {
+    dailyBlocks.splice(blIndex, 1);
+    renderBlocks();
+    toast('Block deleted');
+  } else {
+    if (bl._id) {
+      try {
+        await fetch(`${API}/api/tasks/${bl._id}`, { method: 'DELETE' });
+        toast('Block deleted');
+      } catch (e) {
+        console.error(e);
+        toast('Error deleting block');
+      }
+    } else {
+      dailyBlocks.splice(blIndex, 1);
+    }
+    loadTasks(curDate);
+  }
+}
+
+function onLRChange() {
+  lrDate = document.getElementById('lrdp').value;
+  loadLR(lrDate);
+}
+
+function goToday() {
+  lrDate = TODAY;
+  document.getElementById('lrdp').value = TODAY;
+  loadLR(TODAY);
+}
+
+async function loadLR(date) {
+  try {
+    const r = await fetch(`${API}/api/sleep`);
+    const all = await r.json();
+    const rec = all.find(x => x.date === date);
+    if (rec) {
+      document.getElementById('slpBed').value = rec.bedtime || '21:30';
+      document.getElementById('slpWake').value = rec.wakeTime || '05:00';
+      document.getElementById('slpNotes').value = rec.notes || '';
+      setSlpQ(rec.quality || 3);
+    } else {
+      document.getElementById('slpBed').value = '21:30';
+      document.getElementById('slpWake').value = '05:00';
+      document.getElementById('slpNotes').value = '';
+      setSlpQ(3);
+    }
     updSlpDur();
-  }catch(e){}
-  try{
-    const r=await fetch(`${API}/api/stress`);const all=await r.json();
-    const rec=all.find(x=>x.date===date);
-    if(rec){document.getElementById('sslider').value=rec.score||5;document.getElementById('sval').textContent=rec.score||5;document.getElementById('strigger').value=(rec.triggers||[]).join(', ');}
-    else{document.getElementById('sslider').value=5;document.getElementById('sval').textContent=5;document.getElementById('strigger').value='';}
-  }catch(e){}
-  try{const r=await fetch(`${API}/api/reflection/${date}`);const rec=await r.json();loadRFAnswers(rec);}catch(e){loadRFAnswers(null);}
+  } catch (e) {}
+  
+  try {
+    const r = await fetch(`${API}/api/stress`);
+    const all = await r.json();
+    const rec = all.find(x => x.date === date);
+    if (rec) {
+      document.getElementById('sslider').value = rec.score || 5;
+      document.getElementById('sval').textContent = rec.score || 5;
+      document.getElementById('strigger').value = (rec.triggers || []).join(', ');
+    } else {
+      document.getElementById('sslider').value = 5;
+      document.getElementById('sval').textContent = 5;
+      document.getElementById('strigger').value = '';
+    }
+  } catch (e) {}
+  
+  try {
+    const r = await fetch(`${API}/api/reflection/${date}`);
+    const rec = await r.json();
+    loadRFAnswers(rec);
+  } catch (e) {
+    loadRFAnswers(null);
+  }
+  
   renderSchedView(date);
 }
 
-function updSlpDur(){
-  const b=document.getElementById('slpBed').value,w=document.getElementById('slpWake').value;
-  if(!b||!w){document.getElementById('slpdur').textContent='';return;}
-  const[bh,bm]=b.split(':').map(Number),[wh,wm]=w.split(':').map(Number);
-  let m=(wh*60+wm)-(bh*60+bm);if(m<0)m+=1440;
-  document.getElementById('slpdur').textContent=`Duration: ${Math.floor(m/60)}h ${m%60}m`;
-}
-
-function setSlpQ(n){slpQ=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('on',i<n));}
-
-function autoSaveSleep(){clearTimeout(timers.sleep);timers.sleep=setTimeout(saveSleep,700);}
-function autoSaveStress(){clearTimeout(timers.stress);timers.stress=setTimeout(saveStress,700);}
-function autoSaveRF(){clearTimeout(timers.rf);timers.rf=setTimeout(saveRF,500);}
-
-async function saveSleep(){
-  const bed=document.getElementById('slpBed').value,wake=document.getElementById('slpWake').value;
-  const[bh,bm]=bed.split(':').map(Number),[wh,wm]=wake.split(':').map(Number);
-  let m=(wh*60+wm)-(bh*60+bm);if(m<0)m+=1440;
-  try{await fetch(`${API}/api/sleep`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:lrDate,bedtime:bed,wakeTime:wake,durationMinutes:m,quality:slpQ,notes:document.getElementById('slpNotes').value})});toast('Sleep saved');}catch(e){}
-}
-
-async function saveStress(){
-  const score=parseInt(document.getElementById('sslider').value);
-  try{await fetch(`${API}/api/stress`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:lrDate,score,triggers:document.getElementById('strigger').value?[document.getElementById('strigger').value]:[],notes:''})});toast('Stress saved');}catch(e){}
-}
-
-function buildRF(){
-  const g=document.getElementById('rfgrid');g.innerHTML='';
-  RQS.forEach(q=>{
-    const card=document.createElement('div');
-    card.className='rqcard'+(q.type==='text'?' full':'');
-    if(q.type==='mcq'){card.innerHTML=`<div class="rqtxt">${q.q}</div><div class="mopts">${q.opts.map(o=>`<div class="mopt" data-qid="${q.id}" onclick="selOpt('${q.id}',this)">${o}</div>`).join('')}</div>`;}
-    else{card.innerHTML=`<div class="rqtxt">${q.q}</div><textarea class="rfta" id="rfta-${q.id}" placeholder="Type your answer..." oninput="autoSaveRF()"></textarea>`;}
-    g.appendChild(card);
-  });
-}
-
-function loadRFAnswers(rec){
-  document.querySelectorAll('.mopt').forEach(o=>o.classList.remove('sel'));
-  RQS.filter(q=>q.type==='text').forEach(q=>{const ta=document.getElementById('rfta-'+q.id);if(ta)ta.value='';});
-  if(!rec||!rec.answers)return;
-  rec.answers.forEach(a=>{
-    const q=RQS.find(x=>x.q===a.question);if(!q)return;
-    if(q.type==='mcq')document.querySelectorAll(`.mopt[data-qid="${q.id}"]`).forEach(el=>{if(el.textContent.trim()===a.answer)el.classList.add('sel');});
-    else{const ta=document.getElementById('rfta-'+q.id);if(ta)ta.value=a.answer||'';}
-  });
-}
-
-function selOpt(qid,el){
-  document.querySelectorAll(`.mopt[data-qid="${qid}"]`).forEach(o=>o.classList.remove('sel'));
-  el.classList.add('sel');autoSaveRF();
-}
-
-async function saveRF(){
-  const answers=RQS.map(q=>{
-    let answer='';
-    if(q.type==='mcq'){const s=document.querySelector(`.mopt[data-qid="${q.id}"].sel`);answer=s?s.textContent.trim():'';}
-    else{const ta=document.getElementById('rfta-'+q.id);answer=ta?ta.value:'';}
-    return{question:q.q,type:q.type,answer};
-  });
-  try{await fetch(`${API}/api/reflection`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:lrDate,answers})});toast('Reflection saved');}catch(e){}
-}
-
-async function renderSchedView(date){
-  const c=document.getElementById('schedview');c.innerHTML='<div style="font-size:0.7rem;color:var(--text3)">Loading...</div>';
-  let saved={};
-  try{const r=await fetch(`${API}/api/tasks/${date}`);const arr=await r.json();arr.forEach(t=>{saved[t.blockId]=t;});}catch(e){}
-  // Look up saved dayconfig so we show the schedule actually followed that day
-  let dtype,dcontest=false;
-  try{
-    const r=await fetch(`${API}/api/dayconfig/${date}`);
-    const cfg=await r.json();
-    if(cfg&&cfg.dayType){dtype=cfg.dayType;dcontest=!!cfg.contest;}
-  }catch(e){}
-  if(!dtype){
-    const dow=new Date(date+'T12:00:00').getDay();
-    dtype=dow===0?'sunday':[1,3,5].includes(dow)?'A':'B';
+async function renderSchedView(date) {
+  const c = document.getElementById('schedview');
+  c.innerHTML = '<div style="font-size:0.7rem;color:var(--text3)">Loading...</div>';
+  let savedBlocks = [];
+  try {
+    const r = await fetch(`${API}/api/tasks/${date}`);
+    savedBlocks = await r.json();
+  } catch (e) {}
+  
+  if (!savedBlocks.length) {
+    savedBlocks = JSON.parse(JSON.stringify(DEFAULT_TEMPLATE));
+  } else {
+    savedBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
-  if(!Object.keys(saved).length){c.innerHTML='<div style="font-size:0.72rem;color:var(--text3);padding:6px 0">No tasks recorded for this date.</div>';return;}
-  // Build the effective schedule (with contest blocks if applicable)
-  let sched=JSON.parse(JSON.stringify(SCHED[dtype]));
-  if(dcontest){
-    const wi=sched.findIndex(b=>b.id==='walk');
-    if(wi!==-1)sched=sched.slice(0,wi+1).concat(JSON.parse(JSON.stringify(CBLOCKS)));
-  }
-  c.innerHTML='';
-  sched.forEach(bl=>{
-    const subs=saved[bl.id]?.subtasks||bl.s.map((s,i)=>({id:'st'+i,label:s,done:false}));
-    const dn=subs.filter(s=>s.done).length;
-    const pct=subs.length?Math.round((dn/subs.length)*100):0;
-    const div=document.createElement('div');div.className='vblock';
-    div.innerHTML=`<div class="vstripe c-${bl.c}"></div><div class="vinfo"><div class="vtime">${bl.t}</div><div class="vtitle">${bl.l}</div><div class="vsubs">${subs.map(s=>`<div class="vsub ${s.done?'done':''}"><div class="vtick ${s.done?'ticked':''}">${s.done?'&#10003;':''}</div>${s.label}</div>`).join('')}</div>${subs.length?`<div class="vpct">${dn}/${subs.length} &middot; ${pct}%</div>`:''}</div>`;
+  
+  c.innerHTML = '';
+  savedBlocks.forEach(bl => {
+    const subs = bl.subtasks || [];
+    const dn = subs.filter(s => s.done).length;
+    const pct = subs.length ? Math.round((dn / subs.length) * 100) : 0;
+    const div = document.createElement('div');
+    div.className = 'vblock';
+    
+    const timeDisplay = to12h(bl.startTime) + '–' + to12h(bl.endTime);
+    
+    div.innerHTML = `
+      <div class="vstripe c-${bl.colorClass || 'rest'}"></div>
+      <div class="vinfo">
+        <div class="vtime">${timeDisplay}</div>
+        <div class="vtitle">${bl.blockLabel || bl.label}</div>
+        <div class="vsubs">${subs.map(s => `<div class="vsub ${s.done ? 'done' : ''}"><div class="vtick ${s.done ? 'ticked' : ''}">${s.done ? '&#10003;' : ''}</div>${s.label}</div>`).join('')}</div>
+        ${subs.length ? `<div class="vpct">${dn}/${subs.length} &middot; ${pct}%</div>` : ''}
+        ${bl.notes ? `<div style="font-size:0.65rem; color:var(--text2); margin-top:4px; font-style:italic;">Notes: ${bl.notes}</div>` : ''}
+      </div>
+    `;
     c.appendChild(div);
   });
 }
