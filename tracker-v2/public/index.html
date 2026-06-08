@@ -142,6 +142,67 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-size:0.73rem;color:var(--text2);transition:transform 0.25s;z-index:999;white-space:nowrap;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .c-tech{background:#6366f1}.c-body{background:#4ade80}.c-looks{background:#f472b6}.c-rest{background:#525252}.c-bible{background:#fbbf24}.c-contest{background:#f87171}
+/* ─── Gym Page ─── */
+.gym-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.gym-title{font-family:var(--dis);font-size:1.3rem;font-weight:700}
+.gym-sub{font-size:0.67rem;color:var(--text3);margin-top:2px}
+.mg-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.mg-header{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;transition:background 0.15s}
+.mg-header:hover{background:var(--bg3)}
+.mg-icon{font-size:1.1rem;width:28px;text-align:center;flex-shrink:0}
+.mg-name{font-size:0.85rem;font-weight:600;flex:1}
+.mg-count{font-size:0.62rem;color:var(--text3);background:var(--bg4);padding:2px 8px;border-radius:10px}
+.mg-chev{color:var(--text3);font-size:0.68rem;transition:transform 0.25s;flex-shrink:0}
+.mg-header.open .mg-chev{transform:rotate(180deg)}
+.mg-body{max-height:0;overflow:hidden;transition:max-height 0.35s ease;border-top:0 solid var(--border)}
+.mg-body.open{max-height:2000px;border-top-width:1px}
+.mg-exlist{padding:6px 0}
+.mg-ex{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 54px;cursor:pointer;transition:background 0.12s;font-size:0.78rem;color:var(--text2)}
+.mg-ex:hover{background:var(--bg3);color:var(--text)}
+.mg-ex-name{flex:1}
+.mg-ex-wc{font-size:0.6rem;color:var(--text3)}
+.mg-ex-del{opacity:0;background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.73rem;padding:2px 5px;transition:opacity 0.15s}
+.mg-ex:hover .mg-ex-del{opacity:1}
+.mg-addrow{display:flex;gap:7px;padding:8px 16px 12px 54px}
+.gym-back{background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 12px;color:var(--text2);font-family:var(--mono);font-size:0.72rem;cursor:pointer;transition:all 0.15s}
+.gym-back:hover{border-color:var(--accent);color:var(--text)}
+.ex-detail-name{font-family:var(--dis);font-size:1.15rem;font-weight:700;margin-bottom:2px}
+.ex-detail-mg{font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+.gym-graph-area{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin:16px 0;position:relative}
+.gym-graph-title{font-size:0.63rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.gym-canvas{width:100%;height:200px;display:block;cursor:crosshair}
+.gym-tooltip{position:absolute;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:0.7rem;color:var(--text);pointer-events:none;z-index:10;display:none;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.gym-tooltip .tt-date{font-weight:600;margin-bottom:6px;color:var(--green);font-size:0.72rem}
+.gym-tooltip .tt-row{display:flex;justify-content:space-between;gap:16px;padding:2px 0;color:var(--text2)}
+.gym-tooltip .tt-row span:last-child{color:var(--text);font-weight:500}
+.gym-tooltip .tt-score{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-weight:600;color:var(--amber)}
+.gym-log{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.gym-log-title{font-size:0.63rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.gym-table-wrap{overflow-x:auto}
+.gym-table{width:100%;border-collapse:collapse;font-size:0.75rem}
+.gym-table th{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--text3);font-weight:500;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.gym-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);white-space:nowrap}
+.gym-table tr:hover td{background:var(--bg3);color:var(--text)}
+.gym-table .td-score{color:var(--amber);font-weight:600}
+.gym-table .td-del{opacity:0;background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.7rem;padding:2px 5px;transition:opacity 0.15s}
+.gym-table tr:hover .td-del{opacity:1}
+.gym-table .td-edit{opacity:0;background:none;border:none;color:var(--teal);cursor:pointer;font-size:0.7rem;padding:2px 5px;transition:opacity 0.15s;margin-right:2px}
+.gym-table tr:hover .td-edit{opacity:1}
+.gym-add-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#4ade8020,#2dd4bf20);border:1px solid #4ade8040;border-radius:8px;padding:8px 18px;color:var(--green);font-family:var(--mono);font-size:0.75rem;cursor:pointer;transition:all 0.2s;margin-top:4px}
+.gym-add-btn:hover{background:linear-gradient(135deg,#4ade8030,#2dd4bf30);border-color:var(--green);transform:translateY(-1px)}
+.gym-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.gym-modal-overlay.show{display:flex}
+.gym-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:24px;width:90%;max-width:380px;animation:gmSlide 0.25s ease}
+@keyframes gmSlide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.gym-modal h3{font-family:var(--dis);font-size:0.9rem;font-weight:700;margin-bottom:16px}
+.gym-modal .fg{margin-bottom:12px}
+.gym-modal .gm-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gym-modal .gm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.gm-cancel{background:none;border:1px solid var(--border2);border-radius:6px;padding:6px 16px;color:var(--text2);font-family:var(--mono);font-size:0.75rem;cursor:pointer;transition:all 0.15s}
+.gm-cancel:hover{border-color:var(--accent);color:var(--text)}
+.gm-submit{background:var(--green);border:none;border-radius:6px;padding:6px 16px;color:#0e0e0e;font-family:var(--mono);font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.gm-submit:hover{filter:brightness(1.1)}
+.gym-empty{font-size:0.72rem;color:var(--text3);text-align:center;padding:30px 0}
 @media(max-width:650px){
   nav{padding:0 12px}
   .pg{padding:12px}
@@ -153,6 +214,9 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   .statsgrid{grid-template-columns:1fr 1fr}
   .wkbar{padding:6px 10px}
   .wday{min-width:44px;padding:5px 7px}
+  .mg-ex{padding-left:40px}
+  .mg-addrow{padding-left:40px}
+  .gym-modal{padding:18px;width:95%}
 }
 </style>
 </head>
@@ -216,6 +280,7 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
     <button class="ntab active" onclick="showPg('today',this)">Today</button>
     <button class="ntab" onclick="showPg('logref',this)">Log &amp; Reflect</button>
     <button class="ntab" onclick="showPg('stats',this)">Stats</button>
+    <button class="ntab" onclick="showPg('gym',this)">Gym</button>
   </div>
 </nav>
 <div class="wkbar" id="wkbar"></div>
@@ -286,6 +351,54 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   <div class="chartarea"><div class="charttitle">Stress — 14 days</div><canvas class="chartcanvas" id="stresschart"></canvas></div>
   <div class="card"><div class="ctitle">Academic Progress</div><div id="acadprog"></div></div>
   <div class="card" style="margin-top:10px"><div class="ctitle">Health Collections</div><div id="healthprog"></div></div>
+</div>
+
+<div id="pg-gym" class="pg">
+  <!-- List View -->
+  <div id="gym-list-view">
+    <div class="gym-header">
+      <div><div class="gym-title">Gym Tracker</div><div class="gym-sub">Track your exercises & strength progress</div></div>
+    </div>
+    <div id="gym-groups"></div>
+  </div>
+  <!-- Detail View -->
+  <div id="gym-detail-view" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="gym-back" onclick="gymBackToList()">&#8592; Back</button>
+      <div><div class="ex-detail-name" id="gym-ex-name"></div><div class="ex-detail-mg" id="gym-ex-mg"></div></div>
+    </div>
+    <div class="gym-graph-area">
+      <div class="gym-graph-title">Strength Progress</div>
+      <canvas class="gym-canvas" id="gym-chart"></canvas>
+      <div class="gym-tooltip" id="gym-tooltip"></div>
+    </div>
+    <div class="gym-log">
+      <div class="gym-log-title">Exercise Log</div>
+      <div class="gym-table-wrap"><table class="gym-table" id="gym-log-table"><thead><tr><th>Date</th><th>Set 1</th><th>Set 2</th><th>Strength</th><th></th></tr></thead><tbody id="gym-log-body"></tbody></table></div>
+      <div class="gym-empty" id="gym-log-empty" style="display:none">No workout sessions recorded yet.</div>
+    </div>
+    <button class="gym-add-btn" onclick="openWorkoutModal()">+ Add Workout Session</button>
+  </div>
+</div>
+
+<!-- Gym Workout Modal -->
+<div class="gym-modal-overlay" id="gym-modal-overlay" onclick="if(event.target===this)closeGymModal()">
+  <div class="gym-modal">
+    <h3 id="gym-modal-title">Add Workout Session</h3>
+    <div class="fg"><div class="flbl">Date</div><input type="date" class="finp" id="gm-date"/></div>
+    <div class="gm-row">
+      <div class="fg"><div class="flbl">Set 1 Weight (kg)</div><input type="number" class="finp" id="gm-s1w" placeholder="50" min="0" step="0.5"/></div>
+      <div class="fg"><div class="flbl">Set 1 Reps</div><input type="number" class="finp" id="gm-s1r" placeholder="10" min="0"/></div>
+    </div>
+    <div class="gm-row">
+      <div class="fg"><div class="flbl">Set 2 Weight (kg)</div><input type="number" class="finp" id="gm-s2w" placeholder="55" min="0" step="0.5"/></div>
+      <div class="fg"><div class="flbl">Set 2 Reps</div><input type="number" class="finp" id="gm-s2r" placeholder="8" min="0"/></div>
+    </div>
+    <div class="gm-actions">
+      <button class="gm-cancel" onclick="closeGymModal()">Cancel</button>
+      <button class="gm-submit" onclick="submitWorkout()">Save</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -877,6 +990,7 @@ function showPg(id,btn){
   if(btn)btn.classList.add('active');
   if(id==='stats')loadStats();
   if(id==='logref')loadLR(lrDate);
+  if(id==='gym'){gymBackToList();loadGymExercises();}
 }
 
 let toastT;
@@ -885,7 +999,218 @@ function toast(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);
 }
 let resizeT;
-window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{if(document.getElementById('pg-stats').classList.contains('active'))loadStats();},200);});
+window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{if(document.getElementById('pg-stats').classList.contains('active'))loadStats();if(document.getElementById('pg-gym').classList.contains('active')&&gymCurrentEx)renderGymChart();},200);});
+
+// ─── GYM PAGE ─────────────────────────────────────────────────────────────────
+const MUSCLE_GROUPS=[
+  {name:'Chest',icon:'🏋️'},{name:'Back',icon:'🔙'},{name:'Biceps',icon:'💪'},{name:'Triceps',icon:'🦾'},
+  {name:'Forearms',icon:'✊'},{name:'Legs',icon:'🦵'},{name:'Shoulders',icon:'🤸'},{name:'Abs',icon:'🔥'}
+];
+let gymExercises=[], gymCurrentEx=null, gymChartPts=[], gymEditingWorkoutId=null;
+
+// ── Date conversion helpers ─────────────────────────────────────────────────
+// UI date input → YYYY-MM-DD; stored format → DD-MM-YY
+function isoToDDMMYY(iso){const[y,m,d]=iso.split('-');return`${d}-${m}-${y.slice(2)}`;}
+function ddmmyyToISO(s){const[d,m,y]=s.split('-');return`20${y}-${m}-${d}`;}
+
+async function loadGymExercises(){
+  try{const r=await fetch(`${API}/api/gym/exercises`);gymExercises=await r.json();}catch(e){gymExercises=[];}
+  renderGymGroups();
+}
+
+function renderGymGroups(){
+  const c=document.getElementById('gym-groups');c.innerHTML='';
+  MUSCLE_GROUPS.forEach(mg=>{
+    const exs=gymExercises.filter(e=>e.muscleGroup===mg.name);
+    const div=document.createElement('div');div.className='mg-card';
+    div.innerHTML=`<div class="mg-header" onclick="togMG(this)"><span class="mg-icon">${mg.icon}</span><span class="mg-name">${mg.name}</span><span class="mg-count">${exs.length} exercise${exs.length!==1?'s':''}</span><span class="mg-chev">&#9660;</span></div><div class="mg-body"><div class="mg-exlist" id="mgex-${mg.name}"></div><div class="mg-addrow"><input class="addinp" id="mginp-${mg.name}" placeholder="+ add exercise..." onkeydown="if(event.key==='Enter')addGymEx('${mg.name}')"/><button class="addbtn" onclick="addGymEx('${mg.name}')">+</button></div></div>`;
+    c.appendChild(div);
+    const list=div.querySelector('.mg-exlist');
+    exs.forEach(ex=>{
+      const row=document.createElement('div');row.className='mg-ex';
+      row.innerHTML=`<span class="mg-ex-name">${ex.name}</span><span class="mg-ex-wc">${ex.workouts.length} session${ex.workouts.length!==1?'s':''}</span><button class="mg-ex-del" onclick="event.stopPropagation();delGymEx('${ex._id}')" title="Delete">&#10005;</button>`;
+      row.onclick=()=>openExDetail(ex._id);
+      list.appendChild(row);
+    });
+  });
+}
+
+function togMG(h){
+  const wasOpen=h.classList.contains('open');
+  // Close all open groups first (accordion)
+  document.querySelectorAll('.mg-header.open').forEach(oh=>{oh.classList.remove('open');oh.nextElementSibling.classList.remove('open');});
+  // Re-open if it wasn't already open
+  if(!wasOpen){h.classList.add('open');h.nextElementSibling.classList.add('open');}
+}
+
+async function addGymEx(mg){
+  const inp=document.getElementById('mginp-'+mg);
+  const name=inp.value.trim();if(!name)return;
+  try{await fetch(`${API}/api/gym/exercises`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,muscleGroup:mg})});inp.value='';toast('Exercise added');await loadGymExercises();}catch(e){toast('Error adding exercise');}
+}
+
+async function delGymEx(id){
+  if(!confirm('Delete this exercise and all its workout data?'))return;
+  try{await fetch(`${API}/api/gym/exercises/${id}`,{method:'DELETE'});toast('Exercise deleted');await loadGymExercises();}catch(e){}
+}
+
+function openExDetail(id){
+  const ex=gymExercises.find(e=>e._id===id);if(!ex)return;
+  gymCurrentEx=ex;
+  document.getElementById('gym-list-view').style.display='none';
+  document.getElementById('gym-detail-view').style.display='block';
+  document.getElementById('gym-ex-name').textContent=ex.name;
+  document.getElementById('gym-ex-mg').textContent=ex.muscleGroup;
+  renderGymLog();
+  renderGymChart();
+}
+
+function gymBackToList(){
+  gymCurrentEx=null;
+  document.getElementById('gym-detail-view').style.display='none';
+  document.getElementById('gym-list-view').style.display='block';
+}
+
+function renderGymLog(){
+  const ex=gymCurrentEx;if(!ex)return;
+  const body=document.getElementById('gym-log-body');body.innerHTML='';
+  const empty=document.getElementById('gym-log-empty');
+  const table=document.getElementById('gym-log-table');
+  if(!ex.workouts.length){empty.style.display='block';table.style.display='none';return;}
+  empty.style.display='none';table.style.display='';
+  // Show newest sessions first (descending)
+  [...ex.workouts].reverse().forEach(w=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${w.date}</td><td>${w.set1Weight}kg × ${w.set1Reps}</td><td>${w.set2Weight}kg × ${w.set2Reps}</td><td class="td-score">${w.strengthScore}</td><td><button class="td-edit" onclick="editWorkout('${ex._id}','${w._id}')" title="Edit">✏️</button><button class="td-del" onclick="delWorkout('${ex._id}','${w._id}')" title="Delete">✕</button></td>`;
+    body.appendChild(tr);
+  });
+}
+
+function renderGymChart(){
+  const ex=gymCurrentEx;if(!ex)return;
+  const canvas=document.getElementById('gym-chart');
+  const tooltip=document.getElementById('gym-tooltip');
+  tooltip.style.display='none';
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const W=rect.width,H=rect.height;
+  const pad={top:14,right:14,bottom:28,left:44};
+  const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  ctx.clearRect(0,0,W,H);
+  const wk=ex.workouts;
+  gymChartPts=[];
+  if(!wk.length){ctx.fillStyle='#555';ctx.font='12px JetBrains Mono,monospace';ctx.textAlign='center';ctx.fillText('No data yet — add a workout session',W/2,H/2);return;}
+  const scores=wk.map(w=>w.strengthScore);
+  const minV=Math.min(...scores)*0.85;
+  const maxV=Math.max(...scores)*1.1||1;
+  const range=maxV-minV||1;
+  function xP(i){return pad.left+(i/(wk.length-1||1))*cw;}
+  function yP(v){return pad.top+ch-((v-minV)/range)*ch;}
+  // Grid
+  ctx.strokeStyle='#2c2c2c';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){const y=pad.top+(ch/4)*i;ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(W-pad.right,y);ctx.stroke();const val=maxV-((maxV-minV)/4)*i;ctx.fillStyle='#555';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText(Math.round(val),pad.left-6,y+3);}
+  // X labels
+  ctx.fillStyle='#555';ctx.font='8px JetBrains Mono,monospace';ctx.textAlign='center';
+  const step=wk.length<=7?1:wk.length<=14?2:3;
+  wk.forEach((w,i)=>{if(i%step===0||i===wk.length-1){const d=w.date.slice(0,5);ctx.fillText(d,xP(i),H-4);}});
+  // Build points
+  const pts=wk.map((w,i)=>({x:xP(i),y:yP(w.strengthScore),w}));
+  gymChartPts=pts;
+  // Area fill
+  const grad=ctx.createLinearGradient(0,pad.top,0,pad.top+ch);
+  grad.addColorStop(0,'#4ade8040');grad.addColorStop(1,'#4ade8005');
+  ctx.beginPath();ctx.moveTo(pts[0].x,pad.top+ch);ctx.lineTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++){const p=pts[i-1],c2=pts[i];const cpx=(p.x+c2.x)/2;ctx.bezierCurveTo(cpx,p.y,cpx,c2.y,c2.x,c2.y);}
+  ctx.lineTo(pts[pts.length-1].x,pad.top+ch);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  // Line
+  ctx.shadowColor='#4ade80';ctx.shadowBlur=8;ctx.strokeStyle='#4ade80';ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++){const p=pts[i-1],c2=pts[i];const cpx=(p.x+c2.x)/2;ctx.bezierCurveTo(cpx,p.y,cpx,c2.y,c2.x,c2.y);}
+  ctx.stroke();ctx.shadowBlur=0;
+  // Dots
+  pts.forEach(p=>{ctx.fillStyle='#0e0e0e';ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4ade80';ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();});
+  // Hover/click
+  canvas.onmousemove=e=>gymChartHover(e,canvas,tooltip);
+  canvas.onmouseleave=()=>{tooltip.style.display='none';};
+  canvas.onclick=e=>gymChartHover(e,canvas,tooltip,true);
+}
+
+function gymChartHover(e,canvas,tooltip,sticky){
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  let closest=null,minDist=Infinity;
+  gymChartPts.forEach(p=>{const d=Math.abs(p.x-mx);if(d<minDist){minDist=d;closest=p;}});
+  if(!closest||minDist>30){tooltip.style.display='none';return;}
+  const w=closest.w;
+  tooltip.innerHTML=`<div class="tt-date">${w.date}</div><div class="tt-row"><span>Set 1 Weight</span><span>${w.set1Weight} kg</span></div><div class="tt-row"><span>Set 1 Reps</span><span>${w.set1Reps}</span></div><div class="tt-row"><span>Set 2 Weight</span><span>${w.set2Weight} kg</span></div><div class="tt-row"><span>Set 2 Reps</span><span>${w.set2Reps}</span></div><div class="tt-score">Strength: ${w.strengthScore}</div>`;
+  tooltip.style.display='block';
+  let tx=closest.x+10,ty=closest.y-10;
+  const gArea=document.querySelector('.gym-graph-area').getBoundingClientRect();
+  if(tx+170>gArea.width-16)tx=closest.x-175;
+  if(ty<0)ty=10;
+  tooltip.style.left=tx+'px';tooltip.style.top=ty+'px';
+}
+
+function openWorkoutModal(){
+  gymEditingWorkoutId=null;
+  document.getElementById('gym-modal-title').textContent='Add Workout Session';
+  document.getElementById('gm-date').value=TODAY;
+  document.getElementById('gm-s1w').value='';document.getElementById('gm-s1r').value='';
+  document.getElementById('gm-s2w').value='';document.getElementById('gm-s2r').value='';
+  document.getElementById('gym-modal-overlay').classList.add('show');
+}
+function closeGymModal(){gymEditingWorkoutId=null;document.getElementById('gym-modal-overlay').classList.remove('show');}
+
+function editWorkout(exId,wId){
+  const ex=gymExercises.find(e=>e._id===exId)||gymCurrentEx;if(!ex)return;
+  const w=ex.workouts.find(x=>x._id===wId);if(!w)return;
+  gymEditingWorkoutId=wId;
+  document.getElementById('gym-modal-title').textContent='Edit Workout Session';
+  // Convert stored DD-MM-YY to YYYY-MM-DD for the date input
+  document.getElementById('gm-date').value=ddmmyyToISO(w.date);
+  document.getElementById('gm-s1w').value=w.set1Weight;
+  document.getElementById('gm-s1r').value=w.set1Reps;
+  document.getElementById('gm-s2w').value=w.set2Weight;
+  document.getElementById('gm-s2r').value=w.set2Reps;
+  document.getElementById('gym-modal-overlay').classList.add('show');
+}
+
+async function submitWorkout(){
+  const ex=gymCurrentEx;if(!ex)return;
+  const dateISO=document.getElementById('gm-date').value;
+  const s1w=parseFloat(document.getElementById('gm-s1w').value);
+  const s1r=parseInt(document.getElementById('gm-s1r').value);
+  const s2w=parseFloat(document.getElementById('gm-s2w').value);
+  const s2r=parseInt(document.getElementById('gm-s2r').value);
+  if(!dateISO||isNaN(s1w)||isNaN(s1r)||isNaN(s2w)||isNaN(s2r)){toast('Please fill all fields');return;}
+  // Always store in DD-MM-YY format
+  const date=isoToDDMMYY(dateISO);
+  try{
+    let r;
+    if(gymEditingWorkoutId){
+      r=await fetch(`${API}/api/gym/exercises/${ex._id}/workouts/${gymEditingWorkoutId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,set1Weight:s1w,set1Reps:s1r,set2Weight:s2w,set2Reps:s2r})});
+    } else {
+      r=await fetch(`${API}/api/gym/exercises/${ex._id}/workouts`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,set1Weight:s1w,set1Reps:s1r,set2Weight:s2w,set2Reps:s2r})});
+    }
+    const updated=await r.json();
+    gymCurrentEx=updated;
+    const idx=gymExercises.findIndex(e=>e._id===ex._id);if(idx>=0)gymExercises[idx]=updated;
+    closeGymModal();renderGymLog();renderGymChart();toast(gymEditingWorkoutId?'Workout updated':'Workout saved');
+    gymEditingWorkoutId=null;
+  }catch(e){toast('Error saving workout');}
+}
+
+async function delWorkout(exId,wId){
+  try{
+    const r=await fetch(`${API}/api/gym/exercises/${exId}/workouts/${wId}`,{method:'DELETE'});
+    const updated=await r.json();
+    gymCurrentEx=updated;
+    const idx=gymExercises.findIndex(e=>e._id===exId);if(idx>=0)gymExercises[idx]=updated;
+    renderGymLog();renderGymChart();toast('Workout deleted');
+  }catch(e){toast('Error deleting workout');}
+}
 </script>
 </body>
 </html>

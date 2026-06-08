@@ -65,11 +65,25 @@ const dayConfigSchema = new mongoose.Schema({
   contest: { type: Boolean, default: false }
 }, { timestamps: true });
 
-const Task       = mongoose.model('Task', taskSchema);
-const Sleep      = mongoose.model('Sleep', sleepSchema);
-const Stress     = mongoose.model('Stress', stressSchema);
-const Reflection = mongoose.model('Reflection', reflectionSchema);
-const DayConfig  = mongoose.model('DayConfig', dayConfigSchema);
+const gymExerciseSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  muscleGroup: { type: String, required: true, enum: ['Chest','Back','Biceps','Triceps','Forearms','Legs','Shoulders','Abs'] },
+  workouts: [{
+    date: { type: String, required: true },
+    set1Weight: { type: Number, required: true },
+    set1Reps: { type: Number, required: true },
+    set2Weight: { type: Number, required: true },
+    set2Reps: { type: Number, required: true },
+    strengthScore: { type: Number, required: true }
+  }]
+}, { timestamps: true });
+
+const Task        = mongoose.model('Task', taskSchema);
+const Sleep       = mongoose.model('Sleep', sleepSchema);
+const Stress      = mongoose.model('Stress', stressSchema);
+const Reflection  = mongoose.model('Reflection', reflectionSchema);
+const DayConfig   = mongoose.model('DayConfig', dayConfigSchema);
+const GymExercise = mongoose.model('GymExercise', gymExerciseSchema);
 
 // ─── Task Routes ─────────────────────────────────────────────────────────────
 
@@ -261,6 +275,85 @@ app.get('/api/stats/academic', async (req, res) => {
       result[col] = { total, done, pct: total ? Math.round((done/total)*100) : 0 };
     }
     res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Gym Routes ──────────────────────────────────────────────────────────────
+
+// Parse DD-MM-YY to Date for proper chronological sorting
+function parseDDMMYY(s) {
+  const [d, m, y] = s.split('-').map(Number);
+  return new Date(2000 + y, m - 1, d);
+}
+
+app.get('/api/gym/exercises', async (req, res) => {
+  try {
+    const exercises = await GymExercise.find().sort({ muscleGroup: 1, name: 1 });
+    res.json(exercises);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/gym/exercises', async (req, res) => {
+  try {
+    const exercise = await GymExercise.create({ name: req.body.name, muscleGroup: req.body.muscleGroup, workouts: [] });
+    res.json(exercise);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/gym/exercises/:id', async (req, res) => {
+  try {
+    await GymExercise.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/gym/exercises/:id/workouts', async (req, res) => {
+  try {
+    const ex = await GymExercise.findById(req.params.id);
+    if (!ex) return res.status(404).json({ error: 'Exercise not found' });
+    const { date, set1Weight, set1Reps, set2Weight, set2Reps } = req.body;
+    const strengthScore = (set1Weight * set1Reps) + (set2Weight * set2Reps);
+    // Check for existing entry on same date — update if exists
+    const existingIdx = ex.workouts.findIndex(w => w.date === date);
+    if (existingIdx >= 0) {
+      ex.workouts[existingIdx] = { ...ex.workouts[existingIdx].toObject(), set1Weight, set1Reps, set2Weight, set2Reps, strengthScore };
+    } else {
+      ex.workouts.push({ date, set1Weight, set1Reps, set2Weight, set2Reps, strengthScore });
+    }
+    // Sort ascending (oldest → newest) for graph; log table reverses in frontend
+    ex.workouts.sort((a, b) => parseDDMMYY(a.date) - parseDDMMYY(b.date));
+    await ex.save();
+    res.json(ex);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/gym/exercises/:id/workouts/:wid', async (req, res) => {
+  try {
+    const ex = await GymExercise.findById(req.params.id);
+    if (!ex) return res.status(404).json({ error: 'Exercise not found' });
+    ex.workouts = ex.workouts.filter(w => w._id.toString() !== req.params.wid);
+    await ex.save();
+    res.json(ex);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/gym/exercises/:id/workouts/:wid', async (req, res) => {
+  try {
+    const ex = await GymExercise.findById(req.params.id);
+    if (!ex) return res.status(404).json({ error: 'Exercise not found' });
+    const wIdx = ex.workouts.findIndex(w => w._id.toString() === req.params.wid);
+    if (wIdx < 0) return res.status(404).json({ error: 'Workout not found' });
+    const { date, set1Weight, set1Reps, set2Weight, set2Reps } = req.body;
+    const strengthScore = (set1Weight * set1Reps) + (set2Weight * set2Reps);
+    ex.workouts[wIdx].date        = date;
+    ex.workouts[wIdx].set1Weight  = set1Weight;
+    ex.workouts[wIdx].set1Reps    = set1Reps;
+    ex.workouts[wIdx].set2Weight  = set2Weight;
+    ex.workouts[wIdx].set2Reps    = set2Reps;
+    ex.workouts[wIdx].strengthScore = strengthScore;
+    ex.workouts.sort((a, b) => parseDDMMYY(a.date) - parseDDMMYY(b.date));
+    await ex.save();
+    res.json(ex);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
