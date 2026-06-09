@@ -141,7 +141,7 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
 .acadpct{font-size:0.67rem;color:var(--text3);min-width:34px;text-align:right}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg4);border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-size:0.73rem;color:var(--text2);transition:transform 0.25s;z-index:999;white-space:nowrap;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.c-tech{background:#6366f1}.c-body{background:#4ade80}.c-looks{background:#f472b6}.c-rest{background:#525252}.c-bible{background:#fbbf24}.c-contest{background:#f87171}
+.c-tech{background:#6366f1}.c-body{background:#4ade80}.c-looks{background:#f472b6}.c-rest{background:#525252}.c-bible{background:#fbbf24}.c-contest{background:#f87171}.c-purple{background:#a855f7}.c-teal{background:#2dd4bf}.c-orange{background:#f97316}.c-blue{background:#3b82f6}
 /* ─── Gym Page ─── */
 .gym-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .gym-title{font-family:var(--dis);font-size:1.3rem;font-weight:700}
@@ -258,6 +258,7 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   } else {
     // Clear stale unlock so restored tabs must re-authenticate
     sessionStorage.removeItem('unlocked');
+    document.getElementById('lockscreen').style.display='none';
   }
   window.tryUnlock=function(){
     const inp=document.getElementById('lock-inp');
@@ -291,7 +292,9 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
   <div class="dayhdr">
     <div><div class="daytitle" id="daytitle">—</div><div class="daysub" id="daysub"></div></div>
     <div class="dayctrl">
-      <button class="dcbtn" id="btn-add-block" onclick="showAddBlockModal()">+ Add Block</button>
+      <button class="dcbtn" id="btn-add-block" onclick="showAddBlockModal()">＋ Add</button>
+      <button class="dcbtn ctbtn" id="btn-contest" onclick="toggleContestMode()">⚡ Contest</button>
+      <button class="dcbtn" style="border-color:#ef444450;color:#f87171;" id="btn-reset" onclick="resetToDefault()" title="Reset today to default template">↺ Reset</button>
     </div>
   </div>
   <div class="progwrap">
@@ -417,14 +420,12 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;d
       </div>
     </div>
     <div class="fg">
-      <div class="flbl">Category / Accent Color</div>
-      <select class="finp" id="blk-color" style="background:var(--bg3); color:var(--text); border:1px solid var(--border2); border-radius:6px; padding:7px 10px;">
-        <option value="rest">Rest / General (Gray)</option>
-        <option value="tech">Focus Zone / Academics (Indigo)</option>
-        <option value="body">Body / Exercise (Green)</option>
-        <option value="looks">Looks / Skincare (Pink)</option>
-        <option value="bible">Bible Study (Amber)</option>
-        <option value="contest">Contest / Codeforces (Red)</option>
+      <div class="flbl">Academic Collection</div>
+      <select class="finp" id="blk-collection" style="background:var(--bg3); color:var(--text); border:1px solid var(--border2); border-radius:6px; padding:7px 10px; font-family:var(--mono);">
+        <option value="DSA">DSA</option>
+        <option value="MERN">MERN</option>
+        <option value="Cybersecurity">Cybersecurity</option>
+        <option value="Codeforces">Codeforces</option>
       </select>
     </div>
     <div class="fg">
@@ -497,40 +498,176 @@ const MOT=[
   "Nobody remembers your excuses. Everybody sees your results.",
   "Pain is temporary. Progress is permanent."
 ];
+const LIFESTYLE_IDS = ['wakeup', 'gym', 'morning', 'lunch', 'cardio', 'dinner', 'review', 'nightlook', 'bible', 'sleep', 'contest'];
+
+function isEditable(bl) {
+  const bid = bl.blockId || bl.id;
+  return !LIFESTYLE_IDS.includes(bid);
+}
+
 const DEFAULT_TEMPLATE = [
-  { id: 'morning', startTime: '05:00', endTime: '08:00', label: 'Flexible Morning Block', colorClass: 'rest', subtasks: [
+  { id: 'wakeup', startTime: '05:00', endTime: '05:20', label: 'Wake up + hydrate', colorClass: 'rest', subtasks: [
     { id: 'st1', label: 'Drink 500ml water', done: false, order: 0 },
     { id: 'st2', label: 'Brush teeth', done: false, order: 1 },
-    { id: 'st3', label: 'Quick freshen up', done: false, order: 2 },
-    { id: 'st4', label: 'Shower', done: false, order: 3 },
-    { id: 'st5', label: 'Skincare routine', done: false, order: 4 },
+    { id: 'st3', label: 'Quick freshen up', done: false, order: 2 }
+  ]},
+  { id: 'gym', startTime: '05:20', endTime: '07:05', label: 'Walk to gym + gym session', colorClass: 'body', collection: 'gym', subtasks: [
+    { id: 'st1', label: 'Walk to gym (15 min)', done: false, order: 0 },
+    { id: 'st2', label: 'Warm up (10 min)', done: false, order: 1 },
+    { id: 'st3', label: 'Main lift session', done: false, order: 2 },
+    { id: 'st4', label: 'Cool down / stretch', done: false, order: 3 }
+  ]},
+  { id: 'morning', startTime: '07:05', endTime: '08:00', label: 'Shower + morning skincare + breakfast', colorClass: 'looks', collection: 'looksmax', subtasks: [
+    { id: 'st1', label: 'Shower', done: false, order: 0 },
+    { id: 'st2', label: 'Cleanser', done: false, order: 1 },
+    { id: 'st3', label: 'Toner', done: false, order: 2 },
+    { id: 'st4', label: 'Moisturiser', done: false, order: 3 },
+    { id: 'st5', label: 'SPF', done: false, order: 4 },
     { id: 'st6', label: 'Breakfast (high protein)', done: false, order: 5 }
   ]},
-  { id: 'focus1', startTime: '08:00', endTime: '13:00', label: 'Focus Zone', colorClass: 'tech', subtasks: [
-    { id: 'st1', label: 'Deep work session 1', done: false, order: 0 },
-    { id: 'st2', label: 'Short break & hydrate', done: false, order: 1 },
-    { id: 'st3', label: 'Deep work session 2', done: false, order: 2 }
+  { id: 'focus1', startTime: '08:00', endTime: '13:00', label: 'Focus Zone', colorClass: 'tech', collection: 'DSA', subtasks: [] },
+  { id: 'lunch', startTime: '13:00', endTime: '14:00', label: 'Lunch + rest', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Eat (high protein)', done: false, order: 0 },
+    { id: 'st2', label: 'Short nap if needed', done: false, order: 1 }
   ]},
-  { id: 'lunch', startTime: '13:00', endTime: '14:00', label: 'Lunch / Recovery', colorClass: 'rest', subtasks: [
-    { id: 'st1', label: 'Eat lunch (high protein)', done: false, order: 0 },
-    { id: 'st2', label: 'Rest / Short nap', done: false, order: 1 }
-  ]},
-  { id: 'focus2', startTime: '14:00', endTime: '17:30', label: 'Focus Zone', colorClass: 'tech', subtasks: [
-    { id: 'st1', label: 'Deep work session 3', done: false, order: 0 },
-    { id: 'st2', label: 'Short break & stretch', done: false, order: 1 }
-  ]},
+  { id: 'focus2', startTime: '14:00', endTime: '17:30', label: 'Focus Zone', colorClass: 'tech', collection: 'DSA', subtasks: [] },
   { id: 'cardio', startTime: '17:30', endTime: '19:00', label: 'Cardio', colorClass: 'body', subtasks: [
     { id: 'st1', label: 'Walk or run (brisk pace)', done: false, order: 0 },
     { id: 'st2', label: 'Stretch & cool down', done: false, order: 1 }
   ]},
-  { id: 'evening', startTime: '19:00', endTime: '22:00', label: 'Flexible Evening Block', colorClass: 'rest', subtasks: [
-    { id: 'st1', label: 'Dinner (light carbs)', done: false, order: 0 },
-    { id: 'st2', label: 'Review & plan tomorrow', done: false, order: 1 },
-    { id: 'st3', label: 'Night shower & skincare', done: false, order: 2 },
-    { id: 'st4', label: 'Bible study / Reading', done: false, order: 3 },
-    { id: 'st5', label: 'Sleep (phone down)', done: false, order: 4 }
+  { id: 'dinner', startTime: '19:00', endTime: '19:45', label: 'Dinner', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Eat (high protein, light carbs)', done: false, order: 0 }
+  ]},
+  { id: 'review', startTime: '19:45', endTime: '20:10', label: 'Review + plan tomorrow', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'What did you solve today?', done: false, order: 0 },
+    { id: 'st2', label: 'What to push next session?', done: false, order: 1 }
+  ]},
+  { id: 'nightlook', startTime: '20:10', endTime: '20:40', label: 'Night shower + skincare', colorClass: 'looks', collection: 'looksmax', subtasks: [
+    { id: 'st1', label: 'Long shower (20 min)', done: false, order: 0 },
+    { id: 'st2', label: 'Cleanser', done: false, order: 1 },
+    { id: 'st3', label: 'Toner', done: false, order: 2 },
+    { id: 'st4', label: 'Retinol', done: false, order: 3 },
+    { id: 'st5', label: 'Night cream', done: false, order: 4 },
+    { id: 'st6', label: 'Facial exercises (jaw, cheeks, neck)', done: false, order: 5 },
+    { id: 'st7', label: 'Voice maxxing (10 min)', done: false, order: 6 }
+  ]},
+  { id: 'bible', startTime: '20:40', endTime: '21:10', label: 'Bible study', colorClass: 'bible', collection: 'bible', subtasks: [
+    { id: 'st1', label: 'Read passage', done: false, order: 0 },
+    { id: 'st2', label: 'Reflect / journal', done: false, order: 1 }
+  ]},
+  { id: 'custom', startTime: '21:10', endTime: '21:30', label: 'Custom Block', colorClass: 'tech', collection: 'DSA', subtasks: [] },
+  { id: 'sleep', startTime: '21:30', endTime: '22:00', label: 'Lights out', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Phone down', done: false, order: 0 },
+    { id: 'st2', label: 'Sleep', done: false, order: 1 }
   ]}
 ];
+
+// Contest day template — same daytime as DEFAULT, but evening has the contest block
+const CONTEST_TEMPLATE = [
+  { id: 'wakeup', startTime: '05:00', endTime: '05:20', label: 'Wake up + hydrate', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Drink 500ml water', done: false, order: 0 },
+    { id: 'st2', label: 'Brush teeth', done: false, order: 1 },
+    { id: 'st3', label: 'Quick freshen up', done: false, order: 2 }
+  ]},
+  { id: 'gym', startTime: '05:20', endTime: '07:05', label: 'Walk to gym + gym session', colorClass: 'body', collection: 'gym', subtasks: [
+    { id: 'st1', label: 'Walk to gym (15 min)', done: false, order: 0 },
+    { id: 'st2', label: 'Warm up (10 min)', done: false, order: 1 },
+    { id: 'st3', label: 'Main lift session', done: false, order: 2 },
+    { id: 'st4', label: 'Cool down / stretch', done: false, order: 3 }
+  ]},
+  { id: 'morning', startTime: '07:05', endTime: '08:00', label: 'Shower + morning skincare + breakfast', colorClass: 'looks', collection: 'looksmax', subtasks: [
+    { id: 'st1', label: 'Shower', done: false, order: 0 },
+    { id: 'st2', label: 'Cleanser', done: false, order: 1 },
+    { id: 'st3', label: 'Toner', done: false, order: 2 },
+    { id: 'st4', label: 'Moisturiser', done: false, order: 3 },
+    { id: 'st5', label: 'SPF', done: false, order: 4 },
+    { id: 'st6', label: 'Breakfast (high protein)', done: false, order: 5 }
+  ]},
+  { id: 'focus1', startTime: '08:00', endTime: '13:00', label: 'Focus Zone', colorClass: 'tech', collection: 'DSA', subtasks: [] },
+  { id: 'lunch', startTime: '13:00', endTime: '14:00', label: 'Lunch + rest', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Eat (high protein)', done: false, order: 0 },
+    { id: 'st2', label: 'Short nap if needed', done: false, order: 1 }
+  ]},
+  { id: 'focus2', startTime: '14:00', endTime: '17:30', label: 'Focus Zone', colorClass: 'tech', collection: 'DSA', subtasks: [] },
+  { id: 'cardio', startTime: '17:30', endTime: '19:00', label: 'Cardio', colorClass: 'body', subtasks: [
+    { id: 'st1', label: 'Walk or run (brisk pace)', done: false, order: 0 },
+    { id: 'st2', label: 'Stretch & cool down', done: false, order: 1 }
+  ]},
+  { id: 'dinner', startTime: '19:00', endTime: '19:45', label: 'Dinner', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Eat (high protein, light carbs)', done: false, order: 0 }
+  ]},
+  { id: 'review', startTime: '19:45', endTime: '20:00', label: 'Review + plan tomorrow', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'What did you solve today?', done: false, order: 0 },
+    { id: 'st2', label: 'What to push next session?', done: false, order: 1 }
+  ]},
+  { id: 'contest', startTime: '20:00', endTime: '21:30', label: '⚡ Contest', colorClass: 'contest', collection: 'Codeforces', subtasks: [
+    { id: 'st1', label: 'Read all problems first (5 min)', done: false, order: 0 },
+    { id: 'st2', label: 'Solve A & B', done: false, order: 1 },
+    { id: 'st3', label: 'Attempt C', done: false, order: 2 },
+    { id: 'st4', label: 'Review & upsolve after contest', done: false, order: 3 }
+  ]},
+  { id: 'nightlook', startTime: '21:30', endTime: '22:00', label: 'Night shower + skincare', colorClass: 'looks', collection: 'looksmax', subtasks: [
+    { id: 'st1', label: 'Long shower (20 min)', done: false, order: 0 },
+    { id: 'st2', label: 'Cleanser', done: false, order: 1 },
+    { id: 'st3', label: 'Toner', done: false, order: 2 },
+    { id: 'st4', label: 'Retinol', done: false, order: 3 },
+    { id: 'st5', label: 'Night cream', done: false, order: 4 },
+    { id: 'st6', label: 'Facial exercises (jaw, cheeks, neck)', done: false, order: 5 },
+    { id: 'st7', label: 'Voice maxxing (10 min)', done: false, order: 6 }
+  ]},
+  { id: 'sleep', startTime: '22:00', endTime: '22:30', label: 'Lights out', colorClass: 'rest', subtasks: [
+    { id: 'st1', label: 'Phone down', done: false, order: 0 },
+    { id: 'st2', label: 'Sleep', done: false, order: 1 }
+  ]}
+];
+
+
+let isContestMode = false;
+
+async function toggleContestMode() {
+  // Directly toggle without confirm dialog (pop‑ups can be blocked)
+  isContestMode = !isContestMode;
+  const btn = document.getElementById('btn-contest');
+  btn.classList.toggle('active', isContestMode);
+
+  // Wipe today's saved blocks and reload the chosen template
+  try {
+    await fetch(`${API}/api/tasks/date/${curDate}`, { method: 'DELETE' });
+  } catch(e) { console.error(e); }
+
+  isUnsavedTemplate = true;
+  dailyBlocks = JSON.parse(JSON.stringify(isContestMode ? CONTEST_TEMPLATE : DEFAULT_TEMPLATE));
+  renderBlocks();
+  toast(isContestMode ? '⚡ Contest mode on' : 'Focus Zone mode restored');
+}
+
+async function resetToDefault() {
+  // 1. Delete ALL saved blocks for today from the DB
+  try {
+    const resp = await fetch(`${API}/api/tasks/date/${curDate}`, { method: 'DELETE' });
+    console.log('[reset] DB delete result:', await resp.json());
+  } catch(e) {
+    console.error('[reset] DB delete failed:', e);
+  }
+
+  // 2. Reset contest mode
+  isContestMode = false;
+  const contestBtn = document.getElementById('btn-contest');
+  if (contestBtn) contestBtn.classList.remove('active');
+
+  // 3. Deep-clone the default template (no _id fields)
+  dailyBlocks = DEFAULT_TEMPLATE.map(bl => ({
+    ...bl,
+    id: bl.id,
+    _id: undefined,
+    subtasks: (bl.subtasks || []).map(s => ({ ...s }))
+  }));
+  isUnsavedTemplate = true;
+
+  // 4. Re-render
+  renderBlocks();
+  toast('↺ Reset to default schedule');
+}
 
 function to12h(timeStr) {
   if (!timeStr) return '';
@@ -655,6 +792,17 @@ function renderBlocks() {
     div.dataset.bid = bid;
     
     const timeDisplay = to12h(bl.startTime) + '–' + to12h(bl.endTime);
+    const isEditableBlock = isEditable(bl);
+    
+    let ctrlHtml = '';
+    if (isEditableBlock) {
+      ctrlHtml = `
+        <div class="bctrls" style="display:flex; justify-content:flex-end; gap:8px; padding:8px 14px; border-top:1px solid var(--border)">
+          <button class="dcbtn" onclick="openEditBlockModal('${bid}')">Edit Block</button>
+          <button class="dcbtn" style="border-color:#f8717150; color:#f87171" onclick="deleteBlock('${bid}')">Delete Block</button>
+        </div>
+      `;
+    }
     
     div.innerHTML = `
       <div class="bheader" onclick="togBlock(this)">
@@ -674,10 +822,7 @@ function renderBlocks() {
           <input class="addinp" id="inp-${bid}" placeholder="+ add subtask..." onkeydown="if(event.key==='Enter')addSub('${bid}')"/>
           <button class="addbtn" onclick="addSub('${bid}')">+</button>
         </div>
-        <div class="bctrls" style="display:flex; justify-content:flex-end; gap:8px; padding:8px 14px; border-top:1px solid var(--border)">
-          <button class="dcbtn" onclick="openEditBlockModal('${bid}')">Edit Block</button>
-          <button class="dcbtn" style="border-color:#f8717150; color:#f87171" onclick="deleteBlock('${bid}')">Delete Block</button>
-        </div>
+        ${ctrlHtml}
       </div>
     `;
     c.appendChild(div);
@@ -892,29 +1037,29 @@ let pendingConflicts = null;
 
 function showAddBlockModal() {
   currentEditBlockId = null;
-  document.getElementById('block-modal-title').textContent = 'Add Schedule Block';
+  document.getElementById('block-modal-title').textContent = 'Add Study Block';
   document.getElementById('blk-title').value = '';
   document.getElementById('blk-start').value = '08:00';
-  document.getElementById('blk-end').value = '09:00';
+  document.getElementById('blk-end').value = '10:30';
   document.getElementById('blk-notes').value = '';
-  
-  const colors = ['tech', 'body', 'looks', 'rest', 'bible', 'contest'];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-  document.getElementById('blk-color').value = randomColor;
-  
+  document.getElementById('blk-collection').value = 'DSA';
   document.getElementById('block-modal-overlay').classList.add('show');
 }
 
 function openEditBlockModal(bid) {
   const bl = dailyBlocks.find(b => (b._id || b.id) === bid);
   if (!bl) return;
+  if (!isEditable(bl)) {
+    toast('Lifestyle blocks cannot be modified');
+    return;
+  }
   currentEditBlockId = bid;
-  document.getElementById('block-modal-title').textContent = 'Edit Schedule Block';
+  document.getElementById('block-modal-title').textContent = 'Edit Study Block';
   document.getElementById('blk-title').value = bl.blockLabel || bl.label || '';
   document.getElementById('blk-start').value = bl.startTime || '08:00';
   document.getElementById('blk-end').value = bl.endTime || '09:00';
-  document.getElementById('blk-color').value = bl.colorClass || 'rest';
   document.getElementById('blk-notes').value = bl.notes || '';
+  document.getElementById('blk-collection').value = bl.collection || 'DSA';
   
   document.getElementById('block-modal-overlay').classList.add('show');
 }
@@ -951,8 +1096,8 @@ function submitBlockForm() {
   const title = document.getElementById('blk-title').value.trim();
   const start = document.getElementById('blk-start').value;
   const end = document.getElementById('blk-end').value;
-  const color = document.getElementById('blk-color').value;
   const notes = document.getElementById('blk-notes').value.trim();
+  const collection = document.getElementById('blk-collection').value;
   
   if (!title || !start || !end) {
     toast('Please fill in Title, Start Time, and End Time');
@@ -964,20 +1109,21 @@ function submitBlockForm() {
     return;
   }
   
-  let collection = 'general';
-  if (color === 'tech') collection = 'DSA';
-  else if (color === 'body') collection = 'gym';
-  else if (color === 'looks') collection = 'looksmax';
-  else if (color === 'bible') collection = 'bible';
-  else if (color === 'contest') collection = 'Codeforces';
-  
   const existingBl = currentEditBlockId ? dailyBlocks.find(b => (b._id || b.id) === currentEditBlockId) : null;
+  
+  let colorClass = 'tech';
+  if (existingBl && existingBl.colorClass) {
+    colorClass = existingBl.colorClass;
+  } else {
+    const ACCENT_CLASSES = ['tech', 'looks', 'bible', 'contest', 'purple', 'teal', 'orange', 'blue'];
+    colorClass = ACCENT_CLASSES[Math.floor(Math.random() * ACCENT_CLASSES.length)];
+  }
   
   const blockData = {
     blockLabel: title,
     startTime: start,
     endTime: end,
-    colorClass: color,
+    colorClass: colorClass,
     collection: collection,
     notes: notes,
     subtasks: existingBl ? existingBl.subtasks : []
@@ -1079,6 +1225,10 @@ async function deleteBlock(bid) {
   if (blIndex === -1) return;
   
   const bl = dailyBlocks[blIndex];
+  if (!isEditable(bl)) {
+    toast('Lifestyle blocks cannot be deleted');
+    return;
+  }
   
   if (isUnsavedTemplate) {
     dailyBlocks.splice(blIndex, 1);
@@ -1097,6 +1247,20 @@ async function deleteBlock(bid) {
       dailyBlocks.splice(blIndex, 1);
     }
     loadTasks(curDate);
+  }
+}
+
+async function resetToDefault() {
+  if (!confirm('Reset today\'s schedule to the default template? This will delete all saved blocks for today.')) return;
+  try {
+    await fetch(`${API}/api/tasks/date/${curDate}`, { method: 'DELETE' });
+    isUnsavedTemplate = true;
+    dailyBlocks = JSON.parse(JSON.stringify(DEFAULT_TEMPLATE));
+    renderBlocks();
+    toast('Schedule reset to default ✓');
+  } catch (e) {
+    console.error(e);
+    toast('Error resetting schedule');
   }
 }
 

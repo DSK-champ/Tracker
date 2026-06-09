@@ -118,6 +118,14 @@ app.put('/api/tasks/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Delete ALL tasks for a given date (reset day to default template)
+app.delete('/api/tasks/date/:date', async (req, res) => {
+  try {
+    await Task.deleteMany({ date: req.params.date });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.delete('/api/tasks/:id', async (req, res) => {
   try {
     await Task.findByIdAndDelete(req.params.id);
